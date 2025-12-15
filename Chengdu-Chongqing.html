@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chengdu & Chongqing Trip 2024 (Database Connected)</title>
+    <title>Chengdu & Chongqing Trip 2024 (Debug Mode)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -96,7 +96,7 @@
                 <i v-if="syncStatus==='error'" class="fa-solid fa-triangle-exclamation text-red-500"></i>
                 <span>{{ syncStatusText }}</span>
             </div>
-            <div v-if="errorMsg" class="text-red-300 mt-1 border-t border-gray-600 pt-1">{{ errorMsg }}</div>
+            <div v-if="errorMsg" class="text-red-300 mt-1 border-t border-gray-600 pt-1 font-mono text-[10px] break-all">{{ errorMsg }}</div>
         </div>
 
         <div class="snow-layer"></div>
@@ -182,8 +182,8 @@
 
             <div class="bg-slate-100 rounded-3xl p-5 border border-slate-200 text-center">
                 <h3 class="font-bold text-slate-600 mb-2">資料庫管理</h3>
-                <p class="text-xs text-slate-400 mb-3">如果您看不到行程，或想恢復預設值</p>
-                <button @click="resetToDefault" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-rotate-left mr-2"></i> 強制寫入預設行程</button>
+                <p class="text-xs text-slate-400 mb-3">如果行程表一片空白，請按此按鈕初始化。</p>
+                <button @click="resetToDefault" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-rotate-left mr-2"></i> 強制寫入預設行程 (9天)</button>
             </div>
 
             <div class="bg-white rounded-3xl p-6 card-shadow">
@@ -302,7 +302,7 @@
 <script>
     const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
-    // Firebase 配置
+    // Firebase 配置 (使用 compat 版本寫法)
     const firebaseConfig = {
         apiKey: "AIzaSyCWj5ms9W1VCLPijZ6wnEZ9vdgmKoiImb8",
         authDomain: "chengdu-chongqing.firebaseapp.com",
@@ -313,10 +313,10 @@
         measurementId: "G-KTMJERHN72"
     };
 
-    // 初始化 Firebase
+    // 初始化 Firebase (Compat版)
     let db = null;
     let docRef = null;
-    const TRIP_DOC_ID = "trip-data-v1"; // 固定文件 ID
+    const TRIP_DOC_ID = "trip-data-v1"; 
 
     try {
         firebase.initializeApp(firebaseConfig);
@@ -495,6 +495,7 @@
                 syncStatus.value = 'saving';
                 syncStatusText.value = '儲存中...';
                 
+                // 注意：使用 JSON.parse(JSON.stringify()) 移除 Vue Proxy
                 docRef.set({
                     itinerary: JSON.parse(JSON.stringify(itineraryData.value)),
                     shopping: JSON.parse(JSON.stringify(shoppingList.value)),
@@ -508,6 +509,7 @@
                     syncStatus.value = 'error';
                     syncStatusText.value = '儲存失敗';
                     errorMsg.value = error.message;
+                    alert("儲存失敗：\n" + error.message);
                 });
             };
 
