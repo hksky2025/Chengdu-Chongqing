@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chengdu & Chongqing Trip 2024 (Full)</title>
+    <title>Chengdu & Chongqing Trip 2024 (Database Connected)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
     <script>
         tailwind.config = {
@@ -29,19 +33,23 @@
         .header-bg { background-color: #ffffff; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; z-index: 10; }
         .header-image-container { width: 100%; height: 250px; overflow: hidden; background-color: #0c4a6e; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; position: relative; }
         .header-image-container img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.9; }
-        .snow-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.5"/></svg>'); z-index: 5; pointer-events: none; }
+        .snow-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.5"/></svg>'); }
+        
         .side-tab-bar { position: absolute; bottom: 45px; right: 16px; z-index: 30; display: flex; flex-direction: row; gap: 8px; }
         .tab-button { width: 40px; height: 40px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); transition: all 0.2s ease; background: white; color: #7DD3FC; }
         .tab-button.active { background-color: #0369A1; color: #ffffff; box-shadow: 0 6px 15px rgba(3, 105, 161, 0.4); transform: scale(1.05); }
+        
         .app-main { padding-top: 25px !important; position: relative; z-index: 5; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .card-shadow { box-shadow: 0 4px 20px rgba(186, 230, 253, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 備註欄優化 */
         .note-content { max-height: 2.5rem; overflow: hidden; transition: max-height 0.3s ease-out; line-height: 1.6; font-size: 0.9rem; }
         .note-content b { font-weight: 800; } 
         .note-content.expanded { max-height: 1000px; }
-        .expense-category-tag { min-width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        
         .expenses-banner { background: linear-gradient(135deg, #BE123C 0%, #FB7185 100%); }
         .date-selector-sticky { background-color: #ffffff; border-bottom: 1px solid #f0f0f0; z-index: 20; top: 0; }
         
@@ -51,25 +59,25 @@
         .tool-btn { padding: 4px 8px; border-radius: 4px; background: white; border: 1px solid #e2e8f0; margin-right: 3px; font-size: 12px; cursor: pointer; }
         .color-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid #ddd; }
         
-        /* 狀態指示燈 */
-        .status-badge { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 20; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(4px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .status-saved .status-dot { background: #4ade80; box-shadow: 0 0 5px #4ade80; }
-        .status-saving .status-dot { background: #facc15; box-shadow: 0 0 5px #facc15; animation: pulse 1s infinite; }
-        .status-error .status-dot { background: #ef4444; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* 狀態診斷面板 */
+        .debug-panel { position: absolute; top: 10px; left: 10px; z-index: 50; background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 8px; color: white; font-size: 11px; max-width: 80%; backdrop-filter: blur(4px); }
+        .status-line { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .bg-green-500 { background-color: #22c55e; }
+        .bg-red-500 { background-color: #ef4444; }
+        .bg-yellow-500 { background-color: #eab308; }
         
-        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0369A1; border-radius: 50%; animation: spin 1s linear infinite; }
+        .loading-screen { position: fixed; inset: 0; background: white; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
 <div id="app" class="app-container">
 
-    <div v-if="isInitialLoading" class="loading-overlay">
-        <div class="spinner mb-4"></div>
-        <p class="text-slate-600 font-bold text-lg">正在從雲端載入完整行程...</p>
+    <div v-if="isLoading" class="loading-screen">
+        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-deep-sea-blue mb-4"></i>
+        <p class="font-bold text-slate-600">正在連接雲端資料庫...</p>
+        <p class="text-xs text-slate-400 mt-2">{{ loadingMessage }}</p>
     </div>
 
     <div class="header-bg relative">
@@ -77,9 +85,18 @@
             <img src="https://images.unsplash.com/photo-1542036647-794d0752d580?q=80&w=1000&auto=format&fit=crop">
         </div>
         
-        <div class="status-badge" :class="`status-${syncStatus}`">
-            <div class="status-dot"></div>
-            <span>{{ syncStatusText }}</span>
+        <div class="debug-panel">
+            <div class="status-line">
+                <div class="dot" :class="dbConnected ? 'bg-green-500' : 'bg-red-500'"></div>
+                <span class="font-bold">Firebase: {{ dbConnected ? '已連線' : '未連線' }}</span>
+            </div>
+            <div class="status-line" v-if="syncStatus">
+                <i v-if="syncStatus==='saving'" class="fa-solid fa-spinner fa-spin text-yellow-500"></i>
+                <i v-if="syncStatus==='saved'" class="fa-solid fa-check text-green-500"></i>
+                <i v-if="syncStatus==='error'" class="fa-solid fa-triangle-exclamation text-red-500"></i>
+                <span>{{ syncStatusText }}</span>
+            </div>
+            <div v-if="errorMsg" class="text-red-300 mt-1 border-t border-gray-600 pt-1">{{ errorMsg }}</div>
         </div>
 
         <div class="snow-layer"></div>
@@ -164,9 +181,9 @@
             </div>
 
             <div class="bg-slate-100 rounded-3xl p-5 border border-slate-200 text-center">
-                <h3 class="font-bold text-slate-600 mb-2">資料管理</h3>
-                <p class="text-xs text-slate-400 mb-3">如果沒看到完整9天行程，請按下方按鈕</p>
-                <button @click="resetToDefault" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-rotate-left mr-2"></i> 重置回預設完整行程</button>
+                <h3 class="font-bold text-slate-600 mb-2">資料庫管理</h3>
+                <p class="text-xs text-slate-400 mb-3">如果您看不到行程，或想恢復預設值</p>
+                <button @click="resetToDefault" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-rotate-left mr-2"></i> 強制寫入預設行程</button>
             </div>
 
             <div class="bg-white rounded-3xl p-6 card-shadow">
@@ -225,13 +242,15 @@
                 <div class="grid grid-cols-2 gap-2">
                     <input v-model="editForm.startTime" placeholder="時間 (09:00)" class="bg-gray-50 p-3 rounded-xl text-sm">
                     <select v-model="editForm.transportType" class="bg-gray-50 p-3 rounded-xl text-sm">
-                        <option value="walk">步行</option><option value="car">打車</option><option value="public">高鐵/地鐵</option><option value="bus">巴士</option><option value="other">其他</option>
+                        <option value="walk">步行</option><option value="car">打車</option><option value="public">高鐵/地鐵</option><option value="bus">巴士</option><option value="boat">乘船</option><option value="other">其他</option>
                     </select>
                 </div>
                 <input v-model="editForm.address" placeholder="地址 (用於地圖)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
-                <input v-model="editForm.price" placeholder="費用 (選填)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
-                <input v-model="editForm.hours" placeholder="營業時間 (選填)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
-                <input v-model="editForm.travelTime" placeholder="移動時間 (選填)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
+                <div class="grid grid-cols-2 gap-2">
+                    <input v-model="editForm.price" placeholder="費用" class="bg-gray-50 p-3 rounded-xl text-sm">
+                    <input v-model="editForm.travelTime" placeholder="車程" class="bg-gray-50 p-3 rounded-xl text-sm">
+                </div>
+                <input v-model="editForm.hours" placeholder="營業時間" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
                 
                 <div class="border rounded-xl overflow-hidden bg-gray-50">
                     <div class="rich-editor-toolbar">
@@ -280,11 +299,10 @@
 
 </div>
 
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+<script>
     const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
+    // Firebase 配置
     const firebaseConfig = {
         apiKey: "AIzaSyCWj5ms9W1VCLPijZ6wnEZ9vdgmKoiImb8",
         authDomain: "chengdu-chongqing.firebaseapp.com",
@@ -295,22 +313,23 @@
         measurementId: "G-KTMJERHN72"
     };
 
+    // 初始化 Firebase
     let db = null;
     let docRef = null;
-    const TRIP_DOC_ID = "trip-full-v2"; // 換個 ID 確保載入新結構
+    const TRIP_DOC_ID = "trip-data-v1"; // 固定文件 ID
 
     try {
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        docRef = doc(db, "trips", TRIP_DOC_ID);
-        console.log("Firebase connected.");
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        docRef = db.collection("trips").doc(TRIP_DOC_ID);
+        console.log("Firebase initialized");
     } catch (e) {
-        console.error("Firebase init failed:", e);
+        console.error("Firebase init failed", e);
     }
 
     createApp({
         setup() {
-            // --- 完整 9 天資料 ---
+            // --- 預設完整 9 天資料 ---
             const initialItinerary = [
                 // Day 1: 12/24 (三)
                 [
@@ -415,13 +434,17 @@
                 { name: '成都: 龍之夢瑞峯公寓', date: '12/24-27' }, { name: '九寨溝: 溝口酒店', date: '12/27-29' }, { name: '重慶: 解放碑酒店', date: '12/29-1/1' }
             ]);
 
-            // 響應式變數
-            const itineraryData = ref([]); // 初始為空，等待 Firebase 載入
+            const itineraryData = ref([]);
             const shoppingList = ref([]);
             const expenses = ref([]);
+            
             const isInitialLoading = ref(true);
+            const isLoading = ref(false); // UI loading
+            const loadingMessage = ref('');
             const syncStatus = ref('saved'); 
-            const syncStatusText = ref('已同步');
+            const syncStatusText = ref('就緒');
+            const dbConnected = ref(false);
+            const errorMsg = ref('');
 
             const currentTab = ref('itinerary');
             const selectedDateIndex = ref(0);
@@ -437,65 +460,67 @@
             const totalExpensesCNY = computed(() => expenses.value.reduce((acc, cur) => acc + (cur.amount || 0), 0));
 
             // --- Firebase ---
-            const loadFromFirebase = async () => {
+            const loadFromFirebase = () => {
                 if (!db) {
                     itineraryData.value = initialItinerary;
                     isInitialLoading.value = false;
+                    errorMsg.value = '資料庫未連線';
                     return;
                 }
-                try {
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
+                
+                docRef.get().then((doc) => {
+                    dbConnected.value = true;
+                    if (doc.exists) {
+                        const data = doc.data();
                         itineraryData.value = data.itinerary || initialItinerary;
                         shoppingList.value = data.shopping || [];
                         expenses.value = data.expenses || [];
                     } else {
                         itineraryData.value = initialItinerary;
-                        saveToFirebase();
+                        saveToFirebase(); // 初始化
                     }
-                } catch (e) {
-                    console.error("Read error:", e);
+                }).catch((error) => {
+                    console.error("Read failed:", error);
+                    errorMsg.value = "讀取失敗: " + error.message;
                     syncStatus.value = 'error';
-                    syncStatusText.value = '讀取失敗';
-                    itineraryData.value = initialItinerary; // 失敗時用預設
-                } finally {
+                    itineraryData.value = initialItinerary;
+                }).finally(() => {
                     isInitialLoading.value = false;
-                }
+                });
             };
 
             let saveTimeout = null;
-            const saveToFirebase = async () => {
+            const saveToFirebase = () => {
                 if (!db) return;
                 syncStatus.value = 'saving';
                 syncStatusText.value = '儲存中...';
-                try {
-                    await setDoc(docRef, {
-                        itinerary: JSON.parse(JSON.stringify(itineraryData.value)),
-                        shopping: JSON.parse(JSON.stringify(shoppingList.value)),
-                        expenses: JSON.parse(JSON.stringify(expenses.value))
-                    });
+                
+                docRef.set({
+                    itinerary: JSON.parse(JSON.stringify(itineraryData.value)),
+                    shopping: JSON.parse(JSON.stringify(shoppingList.value)),
+                    expenses: JSON.parse(JSON.stringify(expenses.value))
+                }).then(() => {
                     syncStatus.value = 'saved';
                     syncStatusText.value = '已同步';
-                } catch (e) {
-                    console.error("Save error:", e);
+                    errorMsg.value = '';
+                }).catch((error) => {
+                    console.error("Save failed:", error);
                     syncStatus.value = 'error';
                     syncStatusText.value = '儲存失敗';
-                }
+                    errorMsg.value = error.message;
+                });
             };
 
-            // 自動儲存監聽
             watch([itineraryData, shoppingList, expenses], () => {
                 if (isInitialLoading.value) return;
                 clearTimeout(saveTimeout);
                 syncStatus.value = 'saving';
                 syncStatusText.value = '變更待上傳...';
-                saveTimeout = setTimeout(saveToFirebase, 1500);
+                saveTimeout = setTimeout(saveToFirebase, 1000);
             }, { deep: true });
 
-            // 重置功能
             const resetToDefault = () => {
-                if(confirm('確定要刪除所有修改，回復到原始 9 天預設行程嗎？')) {
+                if(confirm('確定要強制覆蓋資料庫，回復到原始 9 天預設行程嗎？')) {
                     itineraryData.value = JSON.parse(JSON.stringify(initialItinerary));
                     shoppingList.value = [];
                     expenses.value = [];
@@ -569,6 +594,7 @@
                 } else {
                     itineraryData.value[selectedDateIndex.value].push({ ...editForm.value });
                 }
+                
                 showItineraryModal.value = false;
             };
 
@@ -605,7 +631,7 @@
                 showItineraryModal, showSimpleModal, isEditMode, editForm, simpleForm,
                 openAddModal, editItem, saveItem, deleteItem, moveItem, saveSimpleItem, deleteShoppingItem, deleteExpenseItem,
                 openMap, openMapDirections, execCmd, formatNoteDisplay,
-                isLoading: isInitialLoading, syncStatus, syncStatusText, resetToDefault
+                isInitialLoading, isLoading, loadingMessage, syncStatus, syncStatusText, dbConnected, errorMsg, resetToDefault
             };
         }
     }).mount('#app');
