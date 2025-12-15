@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chengdu & Chongqing Trip 2024 (Firebase Synced)</title>
+    <title>Chengdu & Chongqing Trip 2024 (Final Corrected)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -245,7 +245,7 @@
                 <div class="grid grid-cols-2 gap-2">
                     <input v-model="editForm.startTime" placeholder="時間 (09:00)" class="bg-gray-50 p-3 rounded-xl text-sm">
                     <select v-model="editForm.transportType" class="bg-gray-50 p-3 rounded-xl text-sm">
-                        <option value="walk">步行</option><option value="car">打車/包車</option><option value="bus">巴士</option><option value="public">高鐵/地鐵</option><option value="flight">飛機</option><option value="boat">乘船</option><option value="other">其他</option>
+                        <option value="walk">步行</option><option value="car">打車</option><option value="public">高鐵/地鐵</option><option value="bus">巴士</option><option value="boat">乘船</option><option value="other">其他</option>
                     </select>
                 </div>
                 <input v-model="editForm.address" placeholder="地址 (用於地圖)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
@@ -406,7 +406,7 @@
                     { id: 802, category: 'sightseeing', startTime: '10:30', name: '李子壩輕軌穿樓', note: '步行下坡觀景台', transportType: 'walk' },
                     { id: 803, category: 'food', startTime: '12:00', name: '午餐', note: '長江索道南站（上新街）', transportType: 'car' },
                     { id: 804, category: 'sightseeing', startTime: '13:00', name: '長江索道', note: '南站（上新街）→ 北站（新華路）', hours: '13:00-14:00', price: '需查票價', transportType: 'other' },
-                    { id: 805, category: 'sightseeing', startTime: '14:30', name: '白象居', note: '老居民樓', transportType: 'walk' },
+                    { id: 805, category: 'sightseeing', startTime: '14:30', name: '白象居', note: '老居民樓打卡', transportType: 'walk' },
                     { id: 806, category: 'sightseeing', startTime: '16:00', name: '湖廣會館', note: '', transportType: 'walk' },
                     { id: 807, category: 'shopping', startTime: '17:00', name: '解放碑/好吃街', note: '跨年倒數，可能封路。八一路好吃街覓食。', transportType: 'walk' }
                 ],
@@ -551,7 +551,7 @@
             // --- 一般邏輯 ---
             const calcRate = () => currencyResult.value = Math.round(currencyInput.value * 1.08);
             
-            // ICON & COLOR MAPPING (根據需求調整顏色)
+            // ★★★ ICON & COLOR MAPPING (已確認為正確的藍色飛機與橙色火車) ★★★
             const getCategoryColor = (c) => ({ 
                 sightseeing: 'bg-green-600', 
                 food: 'bg-red-600', 
