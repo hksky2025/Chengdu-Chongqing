@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chengdu & Chongqing Trip 2024 (Debug Mode)</title>
+    <title>Chengdu & Chongqing Trip 2024 (Fixed)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -302,7 +302,7 @@
 <script>
     const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
-    // Firebase 配置 (使用 compat 版本寫法)
+    // Firebase 配置
     const firebaseConfig = {
         apiKey: "AIzaSyCWj5ms9W1VCLPijZ6wnEZ9vdgmKoiImb8",
         authDomain: "chengdu-chongqing.firebaseapp.com",
@@ -313,10 +313,10 @@
         measurementId: "G-KTMJERHN72"
     };
 
-    // 初始化 Firebase (Compat版)
+    // 初始化 Firebase
     let db = null;
     let docRef = null;
-    const TRIP_DOC_ID = "trip-data-v1"; 
+    const TRIP_DOC_ID = "trip-data-v1-fixed"; // 更新 ID 避免舊資料干擾
 
     try {
         firebase.initializeApp(firebaseConfig);
@@ -472,7 +472,14 @@
                     dbConnected.value = true;
                     if (doc.exists) {
                         const data = doc.data();
-                        itineraryData.value = data.itinerary || initialItinerary;
+                        
+                        // 資料結構轉換: 從 Firebase 物件陣列 轉回 陣列的陣列
+                        if (data.itinerary) {
+                            itineraryData.value = data.itinerary.map(dayWrapper => dayWrapper.items || []);
+                        } else {
+                            itineraryData.value = initialItinerary;
+                        }
+                        
                         shoppingList.value = data.shopping || [];
                         expenses.value = data.expenses || [];
                     } else {
@@ -495,9 +502,12 @@
                 syncStatus.value = 'saving';
                 syncStatusText.value = '儲存中...';
                 
-                // 注意：使用 JSON.parse(JSON.stringify()) 移除 Vue Proxy
+                // 資料結構轉換: 從 陣列的陣列 轉為 物件陣列 (Firebase 不支援 nested arrays)
+                // [ [item1, item2], [item3] ] -> [ {items:[item1, item2]}, {items:[item3]} ]
+                const safeItinerary = itineraryData.value.map(dayItems => ({ items: JSON.parse(JSON.stringify(dayItems)) }));
+
                 docRef.set({
-                    itinerary: JSON.parse(JSON.stringify(itineraryData.value)),
+                    itinerary: safeItinerary,
                     shopping: JSON.parse(JSON.stringify(shoppingList.value)),
                     expenses: JSON.parse(JSON.stringify(expenses.value))
                 }).then(() => {
@@ -509,7 +519,6 @@
                     syncStatus.value = 'error';
                     syncStatusText.value = '儲存失敗';
                     errorMsg.value = error.message;
-                    alert("儲存失敗：\n" + error.message);
                 });
             };
 
