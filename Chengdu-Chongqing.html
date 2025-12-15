@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chengdu & Chongqing Trip 2024 (Final Corrected)</title>
+    <title>Chengdu & Chongqing Trip 2024 (Icons Restored)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,7 +19,14 @@
                 extend: {
                     colors: {
                         'snow-white': '#F9FAFB', 'ice-blue': '#E0F2FE', 'light-snow-blue': '#F0F9FF',
-                        'deep-sea-blue': '#0369A1', 'accent-yellow': '#FBBF24', 'spicy-red': '#DC2626', 'soft-gray': '#F3F4F6'
+                        'deep-sea-blue': '#0369A1', 'accent-yellow': '#FBBF24', 'spicy-red': '#DC2626', 'soft-gray': '#F3F4F6',
+                        // 定義符合您圖片的顏色
+                        'icon-orange': '#F97316', // 橙色火車
+                        'icon-blue': '#2563EB',   // 藍色飛機
+                        'icon-green': '#10B981',  // 綠色相機
+                        'icon-red': '#EF4444',    // 紅色餐飲
+                        'icon-purple': '#8B5CF6', // 紫色住宿
+                        'icon-grey': '#64748B'    // 灰色其他
                     }
                 }
             }
@@ -58,7 +65,7 @@
         .tool-btn { padding: 4px 8px; border-radius: 4px; background: white; border: 1px solid #e2e8f0; margin-right: 3px; font-size: 12px; cursor: pointer; }
         .color-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid #ddd; }
         
-        /* 狀態診斷面板 */
+        /* 狀態指示燈 */
         .debug-panel { position: absolute; top: 10px; left: 10px; z-index: 50; background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 8px; color: white; font-size: 11px; max-width: 80%; backdrop-filter: blur(4px); }
         .status-line { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; }
@@ -113,7 +120,7 @@
                 <div v-for="(day, index) in dates" :key="index" @click="selectedDateIndex = index"
                      class="flex-shrink-0 w-[58px] h-[68px] rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all border-2 shadow-sm"
                      :class="selectedDateIndex === index ? 'bg-deep-sea-blue text-white border-deep-sea-blue scale-105' : 'bg-white text-gray-400 border-white'">
-                    <span class="text-sm font-bold uppercase tracking-wider">{{ day.weekday }}</span> 
+                    <span class="text-sm font-bold">{{ day.weekday }}</span> 
                     <span class="text-xs opacity-70">{{ day.date }}</span> 
                 </div>
             </div>
@@ -144,9 +151,12 @@
                     
                     <div class="bg-white rounded-3xl p-5 card-shadow flex items-start border border-ice-blue/50 relative">
                         <div class="mr-4 flex flex-col items-center min-w-[50px]">
-                            <div class="p-2 rounded-full text-white shadow-md mb-1" :class="getCategoryColor(item.category)"><i :class="getCategoryIcon(item.category)"></i></div>
+                            <div class="w-10 h-10 rounded-full text-white shadow-md flex items-center justify-center text-lg mb-1" :class="getCategoryColor(item.category)">
+                                <i :class="getCategoryIcon(item.category)"></i>
+                            </div>
                             <span v-if="item.startTime" class="text-xs font-bold text-slate-600 mt-1">{{ item.startTime }}</span>
                         </div>
+
                         <div class="flex-1 pb-1 pr-6">
                             <h3 class="text-lg font-bold text-gray-800 leading-tight">{{ item.name }}</h3>
                             <div class="text-sm text-gray-500 mt-2 space-y-1">
@@ -186,7 +196,7 @@
             <div class="bg-slate-100 rounded-3xl p-5 border border-slate-200 text-center">
                 <h3 class="font-bold text-slate-600 mb-2">資料庫管理</h3>
                 <p class="text-xs text-slate-400 mb-3">如果您看不到行程，或想恢復預設 9 天行程</p>
-                <button @click="resetToDefault" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-rotate-left mr-2"></i> 強制寫入預設行程</button>
+                <button @click="resetToDefault" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-rotate-left mr-2"></i> 強制寫入預設行程 (9天)</button>
             </div>
 
             <div class="bg-white rounded-3xl p-6 card-shadow">
@@ -239,7 +249,13 @@
             <h3 class="font-bold text-lg mb-4 text-center">{{ isEditMode ? '編輯行程' : '新增行程' }}</h3>
             <div class="space-y-3">
                 <select v-model="editForm.category" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
-                    <option value="sightseeing">景點</option><option value="food">飲食</option><option value="transport">交通</option><option value="shopping">購物</option><option value="accommodation">住宿</option><option value="flight">航班</option><option value="other">其他</option>
+                    <option value="sightseeing">景點 (綠)</option>
+                    <option value="food">飲食 (紅)</option>
+                    <option value="transport">交通 (橙)</option>
+                    <option value="shopping">購物 (紫)</option>
+                    <option value="accommodation">住宿 (紫)</option>
+                    <option value="flight">航班 (藍)</option>
+                    <option value="other">其他 (灰)</option>
                 </select>
                 <input v-model="editForm.name" placeholder="名稱" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
                 <div class="grid grid-cols-2 gap-2">
@@ -305,7 +321,7 @@
 <script>
     const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
-    // ★★★ 您的 Firebase Config (已填入) ★★★
+    // Firebase 配置 (已填入)
     const firebaseConfig = {
         apiKey: "AIzaSyCWj5ms9W1VCLPijZ6wnEZ9vdgmKoiImb8",
         authDomain: "chengdu-chongqing.firebaseapp.com",
@@ -316,10 +332,9 @@
         measurementId: "G-KTMJERHN72"
     };
 
-    // 初始化 Firebase (Compat版)
+    // 初始化 Firebase
     let db = null;
     let docRef = null;
-    // 使用新的文件ID以避免舊格式衝突
     const TRIP_DOC_ID = "trip-data-v2-safe"; 
 
     try {
@@ -406,7 +421,7 @@
                     { id: 802, category: 'sightseeing', startTime: '10:30', name: '李子壩輕軌穿樓', note: '步行下坡觀景台', transportType: 'walk' },
                     { id: 803, category: 'food', startTime: '12:00', name: '午餐', note: '長江索道南站（上新街）', transportType: 'car' },
                     { id: 804, category: 'sightseeing', startTime: '13:00', name: '長江索道', note: '南站（上新街）→ 北站（新華路）', hours: '13:00-14:00', price: '需查票價', transportType: 'other' },
-                    { id: 805, category: 'sightseeing', startTime: '14:30', name: '白象居', note: '老居民樓打卡', transportType: 'walk' },
+                    { id: 805, category: 'sightseeing', startTime: '14:30', name: '白象居', note: '老居民樓', transportType: 'walk' },
                     { id: 806, category: 'sightseeing', startTime: '16:00', name: '湖廣會館', note: '', transportType: 'walk' },
                     { id: 807, category: 'shopping', startTime: '17:00', name: '解放碑/好吃街', note: '跨年倒數，可能封路。八一路好吃街覓食。', transportType: 'walk' }
                 ],
@@ -551,33 +566,35 @@
             // --- 一般邏輯 ---
             const calcRate = () => currencyResult.value = Math.round(currencyInput.value * 1.08);
             
-            // ★★★ ICON & COLOR MAPPING (已確認為正確的藍色飛機與橙色火車) ★★★
+            // ★★★ ICON & COLOR MAPPING (依據需求修正) ★★★
             const getCategoryColor = (c) => ({ 
-                sightseeing: 'bg-green-600', 
-                food: 'bg-red-600', 
+                sightseeing: 'bg-icon-green', // 綠色
+                food: 'bg-icon-red',        // 紅色
                 shopping: 'bg-indigo-500', 
-                accommodation: 'bg-purple-600', 
-                flight: 'bg-blue-600', // 飛機藍色
-                transport: 'bg-orange-500', // 火車/交通橙色
-                other: 'bg-gray-500' 
-            }[c] || 'bg-gray-500');
+                accommodation: 'bg-icon-purple', // 紫色
+                flight: 'bg-icon-blue', // 藍色
+                transport: 'bg-icon-orange', // 橙色
+                other: 'bg-icon-grey', // 灰色
+                walk: 'bg-icon-grey'
+            }[c] || 'bg-icon-grey');
 
             const getCategoryIcon = (c) => ({ 
-                sightseeing: 'fa-camera', 
-                food: 'fa-bowl-food', 
-                shopping: 'fa-bag-shopping', 
-                accommodation: 'fa-bed', 
-                flight: 'fa-plane', 
-                transport: 'fa-train', 
-                other: 'fa-info' 
-            }[c] || 'fa-info');
+                sightseeing: 'fa-solid fa-camera', 
+                food: 'fa-solid fa-bowl-rice', 
+                shopping: 'fa-solid fa-bag-shopping', 
+                accommodation: 'fa-solid fa-bed', 
+                flight: 'fa-solid fa-plane-departure', 
+                transport: 'fa-solid fa-train-subway', 
+                other: 'fa-solid fa-info',
+                walk: 'fa-solid fa-person-walking'
+            }[c] || 'fa-solid fa-info');
 
             const getWeatherIcon = (c) => ({ 
-                snow: 'fa-snowflake', 
-                sunny: 'fa-sun', 
-                cloudy: 'fa-cloud', 
-                rain: 'fa-cloud-showers-heavy' 
-            }[c] || 'fa-cloud');
+                snow: 'fa-solid fa-snowflake', 
+                sunny: 'fa-solid fa-sun', 
+                cloudy: 'fa-solid fa-cloud', 
+                rain: 'fa-solid fa-cloud-showers-heavy' 
+            }[c] || 'fa-solid fa-cloud');
 
             const getWeatherDescription = (c) => ({ 
                 snow: '下雪/寒冷', 
@@ -587,13 +604,13 @@
             }[c] || '未知');
 
             const getTransportIcon = (t) => ({ 
-                walk: 'fa-person-walking', 
-                car: 'fa-car', 
-                bus: 'fa-bus', 
-                public: 'fa-train', 
-                flight: 'fa-plane', 
-                boat: 'fa-ship' 
-            }[t] || 'fa-arrow-right');
+                walk: 'fa-solid fa-person-walking', 
+                car: 'fa-solid fa-car', 
+                bus: 'fa-solid fa-bus', 
+                public: 'fa-solid fa-train', 
+                flight: 'fa-solid fa-plane', 
+                boat: 'fa-solid fa-ship' 
+            }[t] || 'fa-solid fa-arrow-right');
 
             const formatNoteDisplay = (note) => {
                 if (!note) return '';
