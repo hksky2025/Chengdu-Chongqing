@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chengdu & Chongqing Trip 2024 (Firebase)</title>
+    <title>Chengdu & Chongqing Trip 2024 (Full)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -51,17 +51,16 @@
         .tool-btn { padding: 4px 8px; border-radius: 4px; background: white; border: 1px solid #e2e8f0; margin-right: 3px; font-size: 12px; cursor: pointer; }
         .color-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid #ddd; }
         
-        /* 狀態指示燈 & 載入遮罩 */
-        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0369A1; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
+        /* 狀態指示燈 */
         .status-badge { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 20; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(4px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; }
         .status-saved .status-dot { background: #4ade80; box-shadow: 0 0 5px #4ade80; }
         .status-saving .status-dot { background: #facc15; box-shadow: 0 0 5px #facc15; animation: pulse 1s infinite; }
         .status-error .status-dot { background: #ef4444; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0369A1; border-radius: 50%; animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
@@ -70,8 +69,7 @@
 
     <div v-if="isInitialLoading" class="loading-overlay">
         <div class="spinner mb-4"></div>
-        <p class="text-slate-600 font-bold text-lg">正在從雲端同步行程...</p>
-        <p class="text-xs text-slate-400 mt-2">Connecting to Firebase</p>
+        <p class="text-slate-600 font-bold text-lg">正在從雲端載入完整行程...</p>
     </div>
 
     <div class="header-bg relative">
@@ -133,7 +131,8 @@
                         <div class="flex-1 pb-1 pr-6">
                             <h3 class="text-lg font-bold text-gray-800 leading-tight">{{ item.name }}</h3>
                             <div class="text-sm text-gray-500 mt-2 space-y-1">
-                                <p v-if="item.price"><i class="fa-solid fa-ticket w-4 text-center mr-1 text-ice-blue"></i> {{ item.price }}</p>
+                                <p v-if="item.hours" class="flex items-center"><i class="fa-regular fa-clock w-4 text-center mr-2 text-ice-blue"></i> {{ item.hours }}</p>
+                                <p v-if="item.price" class="flex items-center"><i class="fa-solid fa-ticket w-4 text-center mr-2 text-ice-blue"></i> {{ item.price }}</p>
                                 <p v-if="item.address" @click="openMap(item.address)" class="cursor-pointer hover:text-blue-500"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-ice-blue"></i> {{ item.address }}</p>
                             </div>
                             <div v-if="item.note" class="mt-3 text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100">
@@ -162,6 +161,12 @@
                     <i class="fa-solid fa-arrow-right"></i>
                     <div class="w-1/2 bg-white/10 rounded-xl px-3 py-2 text-lg font-bold">HK$ {{ currencyResult }}</div>
                 </div>
+            </div>
+
+            <div class="bg-slate-100 rounded-3xl p-5 border border-slate-200 text-center">
+                <h3 class="font-bold text-slate-600 mb-2">資料管理</h3>
+                <p class="text-xs text-slate-400 mb-3">如果沒看到完整9天行程，請按下方按鈕</p>
+                <button @click="resetToDefault" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-rotate-left mr-2"></i> 重置回預設完整行程</button>
             </div>
 
             <div class="bg-white rounded-3xl p-6 card-shadow">
@@ -225,6 +230,8 @@
                 </div>
                 <input v-model="editForm.address" placeholder="地址 (用於地圖)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
                 <input v-model="editForm.price" placeholder="費用 (選填)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
+                <input v-model="editForm.hours" placeholder="營業時間 (選填)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
+                <input v-model="editForm.travelTime" placeholder="移動時間 (選填)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
                 
                 <div class="border rounded-xl overflow-hidden bg-gray-50">
                     <div class="rich-editor-toolbar">
@@ -278,7 +285,6 @@
     import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
     const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
-    // ★★★ 這裡已經填好您提供的設定 ★★★
     const firebaseConfig = {
         apiKey: "AIzaSyCWj5ms9W1VCLPijZ6wnEZ9vdgmKoiImb8",
         authDomain: "chengdu-chongqing.firebaseapp.com",
@@ -291,9 +297,8 @@
 
     let db = null;
     let docRef = null;
-    const TRIP_DOC_ID = "main-trip-data"; 
+    const TRIP_DOC_ID = "trip-full-v2"; // 換個 ID 確保載入新結構
 
-    // 初始化 Firebase
     try {
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
@@ -305,14 +310,91 @@
 
     createApp({
         setup() {
-            // 預設資料 (若資料庫是空的才會用到)
+            // --- 完整 9 天資料 ---
             const initialItinerary = [
-                // Day 1
-                [{ id: 101, name: '香港出發 (油塘)', category: 'transport', startTime: '07:15', note: '環島中港通', transportType: 'bus' }, { id: 103, name: '飛往成都 (CA4340)', category: 'flight', startTime: '13:45', note: '中國國航', transportType: 'flight' }],
-                // Day 2
-                [{ id: 201, name: '前往樂山大佛', category: 'transport', startTime: '08:49', note: 'D1791', transportType: 'public' }],
-                // Days 3-9 預設空陣列
-                [], [], [], [], [], [], []
+                // Day 1: 12/24 (三)
+                [
+                    { id: 101, category: 'transport', startTime: '07:15', name: '香港出發 (油塘)', note: '環島中港通 (記得買票)', transportType: 'bus' },
+                    { id: 102, category: 'transport', startTime: '11:00', name: '深圳寶安機場 抵達', note: '準備辦理登機', transportType: 'bus', travelTime: '3h45m' },
+                    { id: 103, category: 'flight', startTime: '13:45', name: '飛往成都 (CA4340)', note: '中國國航 CA4340\n預計 16:30 抵達成都雙流T2', transportType: 'flight', travelTime: '2h45m' },
+                    { id: 104, category: 'transport', startTime: '16:30', name: '機場 -> 市區', note: '滴滴打車進市區', transportType: 'car', travelTime: '30m' },
+                    { id: 105, category: 'accommodation', startTime: '17:00', name: '入住: 龍之夢瑞峯公寓', note: '寄放行李、辦理入住', transportType: 'walk' },
+                    { id: 106, category: 'sightseeing', startTime: '19:00', name: '望平街', note: '逛街、晚餐', hours: '19:00-22:00', transportType: 'walk' },
+                    { id: 107, category: 'accommodation', startTime: '23:00', name: '返回酒店休息', note: '', transportType: 'walk' }
+                ],
+                // Day 2: 12/25 (四)
+                [
+                    { id: 200, category: 'food', startTime: '07:30', name: '早餐', note: '', transportType: 'walk' },
+                    { id: 201, category: 'transport', startTime: '08:49', name: '成都東 -> 樂山站', note: '高鐵 D1791 (08:49 - 09:35)', transportType: 'public', travelTime: '46m' },
+                    { id: 202, category: 'transport', startTime: '09:35', name: '樂山站 -> 烏尤壩碼頭', note: '因水位原因暫停了嘉州渡碼頭，需到烏尤壩碼頭登船', transportType: 'car', travelTime: '35m' },
+                    { id: 203, category: 'sightseeing', startTime: '10:15', name: '船遊樂山大佛', note: '觀賞大佛全景 (可步道或遊船)', price: '船票', transportType: 'boat' },
+                    { id: 204, category: 'food', startTime: '12:30', name: '午餐: 蹺腳牛肉', note: '樂山必吃', hours: '12:30-13:30', transportType: 'car' },
+                    { id: 205, category: 'transport', startTime: '14:30', name: '樂山站 -> 成都東', note: '滴滴到樂山站，高鐵返回', transportType: 'public', travelTime: '1h' },
+                    { id: 206, category: 'sightseeing', startTime: '17:00', name: '寬窄巷子/錦里古街', note: '夜逛', transportType: 'car', travelTime: '40m' }
+                ],
+                // Day 3: 12/26 (五)
+                [
+                    { id: 300, category: 'food', startTime: '06:30', name: '早餐', note: '早起出發', transportType: 'walk' },
+                    { id: 301, category: 'transport', startTime: '08:04', name: '成都東 -> 峨眉山站', note: '高鐵 C6343 (08:04 - 09:11)', transportType: 'public', travelTime: '67m' },
+                    { id: 302, category: 'transport', startTime: '09:11', name: '前往雷洞坪', note: '站內沿"景區"提示走，乘景區車 (車程2小時)', transportType: 'bus', travelTime: '2h' },
+                    { id: 303, category: 'walk', startTime: '11:30', name: '步行至索道入口', note: '接引殿 (約25分鐘)', transportType: 'walk', travelTime: '25m' },
+                    { id: 304, category: 'sightseeing', startTime: '12:00', name: '峨眉山金頂', note: '坐纜車上山 (5分鐘) + 步行15分鐘。\n世界最高十方普賢菩薩聖像，金光閃閃。', price: '門票+索道', transportType: 'other' },
+                    { id: 305, category: 'transport', startTime: '15:00', name: '下山折返', note: '落山需2.5-3小時。\n尾班車17:00', transportType: 'bus', travelTime: '3h' },
+                    { id: 306, category: 'transport', startTime: '18:00', name: '峨眉山站 -> 成都', note: 'C6344 (18:01) 或 C6264 (18:30)', transportType: 'public', travelTime: '77m' },
+                    { id: 307, category: 'food', startTime: '19:30', name: '春熙路晚餐', note: '', transportType: 'public' }
+                ],
+                // Day 4: 12/27 (六)
+                [
+                    { id: 401, category: 'food', startTime: '08:00', name: '早餐 & 退房', note: '食飽D', transportType: 'walk' },
+                    { id: 402, category: 'transport', startTime: '10:06', name: '成都東 -> 黃龍九寨站', note: '高鐵 C5792 (10:06 - 12:34)\n欣賞川西風光', transportType: 'public', travelTime: '2h28m' },
+                    { id: 403, category: 'transport', startTime: '12:45', name: '接駁車 -> 溝口', note: 'Wechat "九旅悅行" 預訂。\n班次: 12:30-12:50 或 13:40-14:00', transportType: 'bus', travelTime: '2h' },
+                    { id: 404, category: 'accommodation', startTime: '15:00', name: '入住: 漳札鎮溝口酒店', note: '適應海拔，晚餐吃犛牛肉火鍋', transportType: 'walk' }
+                ],
+                // Day 5: 12/28 (日)
+                [
+                    { id: 501, category: 'sightseeing', startTime: '07:00', name: '九寨溝: 進溝', note: '建議第一批入場 (Wechat "阿坝旅游" 預約)', hours: '07:00', price: '門票+車票', transportType: 'bus' },
+                    { id: 502, category: 'sightseeing', startTime: '07:30', name: '則查窪溝線 (左)', note: '長海 & 五彩池 (步行800M)', hours: '07:30-11:30', transportType: 'bus' },
+                    { id: 503, category: 'food', startTime: '12:00', name: '午餐: 諾日朗中心', note: '轉線點', hours: '12:00-13:00', transportType: 'bus' },
+                    { id: 504, category: 'sightseeing', startTime: '13:00', name: '日則溝線 (右)', note: '五花海 — 珍珠灘 — 鏡海 (精華)', hours: '13:00-15:30', transportType: 'bus' },
+                    { id: 505, category: 'sightseeing', startTime: '16:00', name: '諾日朗瀑布', note: '步行900米 (可略過)', hours: '16:00-16:30', transportType: 'walk' },
+                    { id: 506, category: 'sightseeing', startTime: '16:30', name: '樹正群海 (主幹)', note: '主幹溝/樓盤溝線', hours: '16:30-17:30', transportType: 'bus' },
+                    { id: 507, category: 'accommodation', startTime: '18:30', name: '返回酒店', note: '休息', transportType: 'walk' }
+                ],
+                // Day 6: 12/29 (一)
+                [
+                    { id: 601, category: 'transport', startTime: '08:00', name: '前往黃龍九寨站', note: '預留3.5小時 (車程約2小時)', transportType: 'car', travelTime: '2h' },
+                    { id: 602, category: 'transport', startTime: '12:10', name: '黃龍九寨 -> 成都站', note: '高鐵 C5764 (12:10 - 14:17)', transportType: 'public', travelTime: '1h53m' },
+                    { id: 603, category: 'transport', startTime: '15:18', name: '成都站 -> 重慶北', note: '高鐵 G3427 (15:18 - 16:54)', transportType: 'public', travelTime: '1h36m' },
+                    { id: 604, category: 'accommodation', startTime: '17:30', name: '入住: 重慶市區酒店', note: '解放碑/洪崖洞附近', transportType: 'car' },
+                    { id: 605, category: 'sightseeing', startTime: '18:30', name: '洪崖洞夜景', note: '夜遊。\n備註：唔好食辣', hours: '18:30-21:00', transportType: 'walk' }
+                ],
+                // Day 7: 12/30 (二)
+                [
+                    { id: 701, category: 'sightseeing', startTime: '09:00', name: '重慶十八梯', note: '山城步道體驗', transportType: 'walk' },
+                    { id: 702, category: 'sightseeing', startTime: '10:30', name: '磁器口古鎮', note: '滴滴約30分鐘', transportType: 'car' },
+                    { id: 703, category: 'food', startTime: '13:00', name: '午餐 (古鎮)', note: '', hours: '13:00-14:00', transportType: 'walk' },
+                    { id: 704, category: 'sightseeing', startTime: '15:00', name: '白公館/渣滓洞', note: '紅色旅遊點', transportType: 'car' },
+                    { id: 705, category: 'sightseeing', startTime: '17:00', name: '南山一棵樹', note: '日落至夜景\n(後備: 抗戰遺址博物館)', transportType: 'car' },
+                    { id: 706, category: 'food', startTime: '18:30', name: '晚餐: 泉水雞', note: '南山或南濱路', transportType: 'car' }
+                ],
+                // Day 8: 12/31 (三)
+                [
+                    { id: 801, category: 'sightseeing', startTime: '09:00', name: '鵝嶺二廠文創園', note: '文青打卡', transportType: 'car' },
+                    { id: 802, category: 'sightseeing', startTime: '10:30', name: '李子壩輕軌穿樓', note: '步行下坡觀景台', transportType: 'walk' },
+                    { id: 803, category: 'food', startTime: '12:00', name: '午餐', note: '長江索道南站（上新街）', transportType: 'car' },
+                    { id: 804, category: 'sightseeing', startTime: '13:00', name: '長江索道', note: '南站（上新街）→ 北站（新華路）', hours: '13:00-14:00', price: '需查票價', transportType: 'other' },
+                    { id: 805, category: 'sightseeing', startTime: '14:30', name: '白象居', note: '老居民樓', transportType: 'walk' },
+                    { id: 806, category: 'sightseeing', startTime: '16:00', name: '湖廣會館', note: '', transportType: 'walk' },
+                    { id: 807, category: 'shopping', startTime: '17:00', name: '解放碑/好吃街', note: '跨年倒數，可能封路。八一路好吃街覓食。', transportType: 'walk' }
+                ],
+                // Day 9: 1/1 (四)
+                [
+                    { id: 901, category: 'other', startTime: '早上', name: '自然醒', note: '訓到自然醒', transportType: 'stay' },
+                    { id: 902, category: 'shopping', startTime: '12:00', name: '午膳 & 買手信', note: '解放碑步行街。\n備註: 1/1 商店可能放假，最好前兩日買定', transportType: 'walk' },
+                    { id: 903, category: 'transport', startTime: '14:30', name: '前往江北機場', note: '車程30分鐘', transportType: 'car' },
+                    { id: 904, category: 'flight', startTime: '17:30', name: '重慶 -> 深圳', note: '中國國航 CA4340 (17:30 - 19:35)', transportType: 'flight', travelTime: '2h05m' },
+                    { id: 905, category: 'transport', startTime: '21:30', name: '深圳機場 -> 香港', note: '環島巴士 -> 油塘', transportType: 'bus' }
+                ]
             ];
 
             const dates = ref([
@@ -334,16 +416,13 @@
             ]);
 
             // 響應式變數
-            const itineraryData = ref(initialItinerary);
+            const itineraryData = ref([]); // 初始為空，等待 Firebase 載入
             const shoppingList = ref([]);
             const expenses = ref([]);
-            
-            // 雲端同步狀態
             const isInitialLoading = ref(true);
-            const syncStatus = ref('saved'); // saved, saving, error
-            const syncStatusText = ref('已同步 Cloud');
+            const syncStatus = ref('saved'); 
+            const syncStatusText = ref('已同步');
 
-            // UI 狀態
             const currentTab = ref('itinerary');
             const selectedDateIndex = ref(0);
             const showItineraryModal = ref(false);
@@ -357,9 +436,13 @@
             const currentItinerary = computed(() => itineraryData.value[selectedDateIndex.value] || []);
             const totalExpensesCNY = computed(() => expenses.value.reduce((acc, cur) => acc + (cur.amount || 0), 0));
 
-            // --- 雲端讀取 ---
+            // --- Firebase ---
             const loadFromFirebase = async () => {
-                if (!db) return;
+                if (!db) {
+                    itineraryData.value = initialItinerary;
+                    isInitialLoading.value = false;
+                    return;
+                }
                 try {
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
@@ -368,20 +451,22 @@
                         shoppingList.value = data.shopping || [];
                         expenses.value = data.expenses || [];
                     } else {
-                        saveToFirebase(); // 初始化
+                        itineraryData.value = initialItinerary;
+                        saveToFirebase();
                     }
                 } catch (e) {
                     console.error("Read error:", e);
                     syncStatus.value = 'error';
                     syncStatusText.value = '讀取失敗';
+                    itineraryData.value = initialItinerary; // 失敗時用預設
                 } finally {
                     isInitialLoading.value = false;
                 }
             };
 
-            // --- 雲端儲存 (Debounce) ---
             let saveTimeout = null;
             const saveToFirebase = async () => {
+                if (!db) return;
                 syncStatus.value = 'saving';
                 syncStatusText.value = '儲存中...';
                 try {
@@ -391,7 +476,7 @@
                         expenses: JSON.parse(JSON.stringify(expenses.value))
                     });
                     syncStatus.value = 'saved';
-                    syncStatusText.value = '已同步 Cloud';
+                    syncStatusText.value = '已同步';
                 } catch (e) {
                     console.error("Save error:", e);
                     syncStatus.value = 'error';
@@ -399,18 +484,27 @@
                 }
             };
 
-            // 監聽變更自動儲存
+            // 自動儲存監聽
             watch([itineraryData, shoppingList, expenses], () => {
                 if (isInitialLoading.value) return;
                 clearTimeout(saveTimeout);
                 syncStatus.value = 'saving';
                 syncStatusText.value = '變更待上傳...';
-                saveTimeout = setTimeout(saveToFirebase, 1500); // 1.5秒後寫入
+                saveTimeout = setTimeout(saveToFirebase, 1500);
             }, { deep: true });
+
+            // 重置功能
+            const resetToDefault = () => {
+                if(confirm('確定要刪除所有修改，回復到原始 9 天預設行程嗎？')) {
+                    itineraryData.value = JSON.parse(JSON.stringify(initialItinerary));
+                    shoppingList.value = [];
+                    expenses.value = [];
+                    saveToFirebase();
+                }
+            };
 
             // --- 一般邏輯 ---
             const calcRate = () => currencyResult.value = Math.round(currencyInput.value * 1.08);
-            
             const getCategoryColor = (c) => ({ sightseeing: 'bg-green-600', food: 'bg-red-600', shopping: 'bg-indigo-500', accommodation: 'bg-purple-600', flight: 'bg-blue-600', transport: 'bg-orange-500', other: 'bg-gray-500' }[c] || 'bg-gray-500');
             const getCategoryIcon = (c) => ({ sightseeing: 'fa-camera', food: 'fa-bowl-food', shopping: 'fa-bag-shopping', accommodation: 'fa-bed', flight: 'fa-plane', transport: 'fa-train', other: 'fa-info' }[c] || 'fa-info');
             const getWeatherIcon = (c) => ({ snow: 'fa-snowflake', sunny: 'fa-sun', cloudy: 'fa-cloud', rain: 'fa-cloud-showers-heavy' }[c] || 'fa-cloud');
@@ -430,14 +524,12 @@
                 window.open(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(start)}&destination=${encodeURIComponent(end)}`, '_blank');
             };
 
-            // 編輯器
             const execCmd = (cmd, val = null) => {
                 document.execCommand(cmd, false, val);
                 const editor = document.getElementById('editor');
                 if(editor) editForm.value.note = editor.innerHTML;
             };
 
-            // CRUD
             const openAddModal = () => {
                 if(currentTab.value === 'itinerary') {
                     isEditMode.value = false;
@@ -467,10 +559,7 @@
                 if(!editForm.value.name) return alert('請輸入名稱');
 
                 const list = itineraryData.value[selectedDateIndex.value];
-                // 確保 list 存在
-                if (!list) {
-                    itineraryData.value[selectedDateIndex.value] = [];
-                }
+                if (!list) itineraryData.value[selectedDateIndex.value] = [];
                 
                 if(isEditMode.value) {
                     const idx = itineraryData.value[selectedDateIndex.value].findIndex(i => i.id === editForm.value.id);
@@ -480,7 +569,6 @@
                 } else {
                     itineraryData.value[selectedDateIndex.value].push({ ...editForm.value });
                 }
-                
                 showItineraryModal.value = false;
             };
 
@@ -517,7 +605,7 @@
                 showItineraryModal, showSimpleModal, isEditMode, editForm, simpleForm,
                 openAddModal, editItem, saveItem, deleteItem, moveItem, saveSimpleItem, deleteShoppingItem, deleteExpenseItem,
                 openMap, openMapDirections, execCmd, formatNoteDisplay,
-                isInitialLoading, syncStatus, syncStatusText
+                isLoading: isInitialLoading, syncStatus, syncStatusText, resetToDefault
             };
         }
     }).mount('#app');
