@@ -58,18 +58,16 @@
         .expenses-banner { background: linear-gradient(135deg, #BE123C 0%, #FB7185 100%); }
         .date-selector-sticky { background-color: #ffffff; border-bottom: 1px solid #f0f0f0; z-index: 20; top: 0; }
         
-        /* 編輯器樣式優化 */
         .rich-editor-toolbar { padding: 8px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
         .rich-editor-toolbar .tool-btn { padding: 4px 8px; border-radius: 6px; margin-right: 2px; background: #ffffff; border: 1px solid #e2e8f0; color: #475569; font-size: 12px; transition: all 0.2s; height: 28px; min-width: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
         .rich-editor-toolbar .tool-btn:hover { background: #e2e8f0; color: #0369A1; }
         .color-dot { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; display: inline-block; }
         .color-dot:hover { transform: scale(1.2); border-color: rgba(0,0,0,0.3); z-index: 10; }
         
-        /* --- 修正備註欄位大小與捲動 --- */
         .rich-editor-content {
-            min-height: 150px; /* 增加最小高度 */
-            max-height: 300px; /* 增加最大高度 */
-            overflow-y: auto;  /* 內容多時出現卷軸 */
+            min-height: 150px; 
+            max-height: 300px; 
+            overflow-y: auto;  
             outline: none;
             word-wrap: break-word;
             padding: 12px;
@@ -115,7 +113,6 @@
                     <div class="pt-1">
                         <span class="text-3xl font-extrabold leading-none">{{ weatherData[selectedDateIndex].temp.split('/')[0] }}°</span>
                         <span class="text-sm font-light text-slate-500 ml-1">/ {{ weatherData[selectedDateIndex].temp.split('/')[1] }}°C</span>
-                        <span class="block text-xs text-slate-600 mt-1">體感: {{ weatherData[selectedDateIndex].feel }}°C</span> 
                     </div>
                 </div>
                 <div class="text-right text-xs text-slate-600 pl-3">
@@ -182,6 +179,13 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="bg-slate-100 rounded-3xl p-5 border border-slate-200 text-center">
+                <h3 class="font-bold text-slate-600 mb-3">資料管理</h3>
+                <button @click="resetToDefault" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-rotate-left mr-2"></i> 重置回預設行程</button>
+                <p class="text-[10px] text-slate-400 mt-2">如果您修改亂了，可以點擊此按鈕恢復原始資料。<br>注意：您的自訂修改將會消失。</p>
+            </div>
+
             <div class="bg-white rounded-3xl p-5 card-shadow">
                 <h3 class="font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2"><i class="fa-solid fa-plane-departure text-blue-500 mr-2"></i> 航班資訊</h3>
                 <div class="space-y-4">
@@ -370,42 +374,15 @@
 </div>
 
 <script>
-    const { createApp, ref, computed, onMounted, nextTick } = Vue
+    const { createApp, ref, computed, onMounted, nextTick, watch } = Vue
 
     createApp({
         setup() {
+            const STORAGE_KEY = 'trip-planner-v2';
             const EXCHANGE_RATE = 1.08;
 
-            const CATEGORY_MAP = {
-                sightseeing: { color: 'bg-green-600', icon: 'fa-solid fa-camera' },
-                food: { color: 'bg-red-600', icon: 'fa-solid fa-bowl-food' }, 
-                shopping: { color: 'bg-indigo-500', icon: 'fa-solid fa-bag-shopping' },
-                accommodation: { color: 'bg-purple-600', icon: 'fa-solid fa-bed' },
-                flight: { color: 'bg-blue-600', icon: 'fa-solid fa-plane-departure' },
-                transport: { color: 'bg-orange-500', icon: 'fa-solid fa-train' },
-                ticket: { color: 'bg-cyan-600', icon: 'fa-solid fa-ticket' },
-                other: { color: 'bg-slate-500', icon: 'fa-solid fa-circle-info' },
-                stay: { color: 'bg-purple-600', icon: 'fa-solid fa-hotel' }, 
-            };
-            const CATEGORY_LABEL_MAP = { sightseeing: '景點', food: '飲食', shopping: '購物', accommodation: '住宿', flight: '航班', transport: '交通', ticket: '門票', other: '其他', stay: '住宿' };
-
-            const currentTab = ref('itinerary');
-            const dates = ref([
-                { date: '12/24', weekday: '三', hasTrain: false }, { date: '12/25', weekday: '四', hasTrain: true },
-                { date: '12/26', weekday: '五', hasTrain: true }, { date: '12/27', weekday: '六', hasTrain: true },
-                { date: '12/28', weekday: '日', hasTrain: false }, { date: '12/29', weekday: '一', hasTrain: true },
-                { date: '12/30', weekday: '二', hasTrain: false }, { date: '12/31', weekday: '三', hasTrain: false },
-                { date: '1/1', weekday: '四', hasTrain: false }
-            ]);
-
-            const hotels = ref([
-                { name: '龍之夢瑞峯公寓酒店 (成都東站店)', date: '12/24 - 12/27 (3晚)', phone: '', address: '成都市成華區龍之夢瑞峯公寓酒店' },
-                { name: '漳札鎮溝口酒店', date: '12/27 - 12/29 (2晚)', phone: '', address: '九寨溝漳札鎮溝口' },
-                { name: '重慶市區酒店 (解放碑/洪崖洞)', date: '12/29 - 1/1 (3晚)', phone: '', address: '重慶市渝中區解放碑附近' },
-            ]);
-            
-            // 使用者的完整行程資料
-            const itineraryData = ref([
+            // 原始預設資料 (Hardcoded)
+            const defaultItineraryData = [
                 // Day 1: 12/24 (三) 深圳 -> 成都
                 [
                     { id: 101, name: '香港出發 (油塘)', category: 'transport', startTime: '07:15', address: '油塘', note: '環島中港通 (記得買票)', hours: null, price: null, transportType: 'bus', travelTime: null, isNoteExpanded: false },
@@ -489,8 +466,37 @@
                     { id: 904, name: '飛往深圳 (CA4340*)', category: 'flight', startTime: '17:30', address: '深圳寶安國際機場', note: '航班: 中國國航 (17:30 - 19:35)', hours: null, price: null, transportType: 'flight', travelTime: '2h5m', isNoteExpanded: false },
                     { id: 905, name: '返回香港', category: 'transport', startTime: '21:30', address: '香港油塘', note: '乘搭環島巴士，由深圳寶安機場 → 香港油塘', hours: null, price: null, transportType: 'bus', travelTime: null, isNoteExpanded: false },
                 ],
+            ];
+
+            const CATEGORY_MAP = {
+                sightseeing: { color: 'bg-green-600', icon: 'fa-solid fa-camera' },
+                food: { color: 'bg-red-600', icon: 'fa-solid fa-bowl-food' }, 
+                shopping: { color: 'bg-indigo-500', icon: 'fa-solid fa-bag-shopping' },
+                accommodation: { color: 'bg-purple-600', icon: 'fa-solid fa-bed' },
+                flight: { color: 'bg-blue-600', icon: 'fa-solid fa-plane-departure' },
+                transport: { color: 'bg-orange-500', icon: 'fa-solid fa-train' },
+                ticket: { color: 'bg-cyan-600', icon: 'fa-solid fa-ticket' },
+                other: { color: 'bg-slate-500', icon: 'fa-solid fa-circle-info' },
+                stay: { color: 'bg-purple-600', icon: 'fa-solid fa-hotel' }, 
+            };
+            const CATEGORY_LABEL_MAP = { sightseeing: '景點', food: '飲食', shopping: '購物', accommodation: '住宿', flight: '航班', transport: '交通', ticket: '門票', other: '其他', stay: '住宿' };
+
+            const currentTab = ref('itinerary');
+            const dates = ref([
+                { date: '12/24', weekday: '三', hasTrain: false }, { date: '12/25', weekday: '四', hasTrain: true },
+                { date: '12/26', weekday: '五', hasTrain: true }, { date: '12/27', weekday: '六', hasTrain: true },
+                { date: '12/28', weekday: '日', hasTrain: false }, { date: '12/29', weekday: '一', hasTrain: true },
+                { date: '12/30', weekday: '二', hasTrain: false }, { date: '12/31', weekday: '三', hasTrain: false },
+                { date: '1/1', weekday: '四', hasTrain: false }
             ]);
 
+            const hotels = ref([
+                { name: '龍之夢瑞峯公寓酒店 (成都東站店)', date: '12/24 - 12/27 (3晚)', phone: '', address: '成都市成華區龍之夢瑞峯公寓酒店' },
+                { name: '漳札鎮溝口酒店', date: '12/27 - 12/29 (2晚)', phone: '', address: '九寨溝漳札鎮溝口' },
+                { name: '重慶市區酒店 (解放碑/洪崖洞)', date: '12/29 - 1/1 (3晚)', phone: '', address: '重慶市渝中區解放碑附近' },
+            ]);
+            
+            const itineraryData = ref([]);
             const weatherData = ref([
                 { condition: 'cloudy', temp: '10/5', feel: '3' }, 
                 { condition: 'rain', temp: '9/4', feel: '2' },    
@@ -503,18 +509,9 @@
                 { condition: 'sunny', temp: '12/6', feel: '5' },   
             ]);
             
-            const shoppingList = ref([
-                { name: '橋頭火鍋底料', image: null },
-                { name: '熊貓玩偶', image: null },
-                { name: '陳麻花 (磁器口)', image: null },
-            ]);
+            const shoppingList = ref([{ name: '橋頭火鍋底料', image: null }, { name: '熊貓玩偶', image: null }, { name: '陳麻花 (磁器口)', image: null }]);
+            const expenses = ref([{ name: '深圳往返機票', amount: 2000, category: 'flight', date: '2024-11-15', payment: 'card' }, { name: '九寨溝門票預訂', amount: 560, category: 'ticket', date: '2024-12-14', payment: 'card' }]);
 
-            const expenses = ref([
-                { name: '深圳往返機票', amount: 2000, category: 'flight', date: '2024-11-15', payment: 'card' },
-                { name: '九寨溝門票預訂', amount: 560, category: 'ticket', date: '2024-12-14', payment: 'card' },
-            ]);
-
-            // --- 狀態控制 ---
             const selectedDateIndex = ref(0);
             const showShoppingModal = ref(false);
             const showExpenseModal = ref(false);
@@ -532,6 +529,44 @@
             const currencyInput = ref(100);
             const currencyResult = ref(0);
             
+            // --- LocalStorage Logic ---
+            const loadFromStorage = () => {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        itineraryData.value = parsed.itinerary || JSON.parse(JSON.stringify(defaultItineraryData));
+                        shoppingList.value = parsed.shopping || [];
+                        expenses.value = parsed.expenses || [];
+                    } catch (e) {
+                        console.error('Storage error', e);
+                        itineraryData.value = JSON.parse(JSON.stringify(defaultItineraryData));
+                    }
+                } else {
+                    itineraryData.value = JSON.parse(JSON.stringify(defaultItineraryData));
+                }
+            };
+
+            const saveToStorage = () => {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    itinerary: itineraryData.value,
+                    shopping: shoppingList.value,
+                    expenses: expenses.value
+                }));
+            };
+
+            const resetToDefault = () => {
+                if(confirm('確定要重置所有資料嗎？您的所有修改將會遺失。')) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    location.reload();
+                }
+            };
+
+            // Watch for changes to auto-save
+            watch([itineraryData, shoppingList, expenses], () => {
+                saveToStorage();
+            }, { deep: true });
+
             // --- Computed ---
             
             const currentItinerary = computed(() => {
@@ -562,14 +597,11 @@
                 return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             };
 
-            // 處理備註顯示: 將 \n 轉為 <br>, 但保留 HTML 標籤
             const formatNoteDisplay = (note) => {
                 if (!note) return '';
-                // 如果已經包含 HTML tag (e.g., <div>, <br>, <b>)，則假設已經格式化過，不需再轉 \n
                 if (note.match(/<[a-z][\s\S]*>/i)) {
                     return note;
                 }
-                // 否則視為純文字，將 \n 轉為 <br>
                 return note.replace(/\n/g, '<br>');
             };
 
@@ -617,7 +649,6 @@
             const openMapDirections = (startItem, endItem) => {
                 const origin = startItem.address || startItem.name;
                 const destination = endItem.address || endItem.name;
-                
                 if (origin && destination) {
                     const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=${endItem.transportType === 'car' ? 'driving' : 'transit'}`;
                     window.open(url, '_blank');
@@ -639,21 +670,14 @@
                 }
             };
             
-            // --- 行程管理 (包含富文本邏輯) ---
-            
-            // 執行富文本命令
             const execCmd = (command, value = null) => {
-                // 使用 mousedown.prevent 防止按鈕點擊後編輯器失去焦點
                 document.execCommand(command, false, value);
-                
-                // 確保狀態同步
                 const editor = document.getElementById('noteEditor');
                 if(editor) {
                     newItinerary.value.note = editor.innerHTML;
                 }
             };
             
-            // 當編輯框內容變動時同步數據
             const updateNoteContent = (event) => {
                 newItinerary.value.note = event.target.innerHTML;
             };
@@ -663,7 +687,6 @@
                 newItinerary.value = {
                     id: Date.now(), name: '', category: 'sightseeing', startTime: '', hours: '', address: '', price: '', note: '', transportType: 'car', travelTime: '', isNoteExpanded: false
                 };
-                // 清空編輯器
                 nextTick(() => {
                     const editor = document.getElementById('noteEditor');
                     if (editor) editor.innerHTML = '';
@@ -675,11 +698,9 @@
                 newItinerary.value = JSON.parse(JSON.stringify(item)); 
                 showItineraryModal.value = true;
                 
-                // 填充編輯器內容
                 nextTick(() => {
                     const editor = document.getElementById('noteEditor');
                     if (editor) {
-                        // 如果是舊純文字資料，將 \n 轉為 <br> 再放入編輯器，讓編輯器能正確顯示換行
                         let displayContent = newItinerary.value.note || '';
                         if (!displayContent.match(/<[a-z][\s\S]*>/i)) {
                             displayContent = displayContent.replace(/\n/g, '<br>');
@@ -695,31 +716,28 @@
                     return;
                 }
                 
-                // 1. 確保從編輯器獲取最新內容
                 const editor = document.getElementById('noteEditor');
                 if (editor) {
                     newItinerary.value.note = editor.innerHTML;
                 }
 
-                // 2. 直接操作源資料陣列 (itineraryData)，而不是 computed (currentItinerary)
-                // 這解決了編輯後無法儲存的問題
-                const targetList = itineraryData.value[selectedDateIndex.value];
+                // 獲取當前日期的陣列引用
+                const currentDayList = itineraryData.value[selectedDateIndex.value];
 
                 if (isEditMode.value) {
-                    const index = targetList.findIndex(item => item.id === newItinerary.value.id);
+                    const index = currentDayList.findIndex(item => item.id === newItinerary.value.id);
                     if (index !== -1) {
-                        // 直接更新源陣列中的物件
-                        targetList[index] = { ...newItinerary.value };
+                        // 直接更新對象以觸發響應
+                        currentDayList[index] = { ...newItinerary.value };
                     }
                 } else {
                     const newItem = { ...newItinerary.value };
                     newItem.id = Date.now();
-                    targetList.push(newItem);
+                    currentDayList.push(newItem);
                 }
                 
-                // 3. 強制觸發 Vue 的響應式更新
-                itineraryData.value[selectedDateIndex.value] = [...targetList];
-
+                // 強制觸發更新
+                itineraryData.value[selectedDateIndex.value] = [...currentDayList];
                 showItineraryModal.value = false;
                 isEditMode.value = false;
             };
@@ -728,7 +746,6 @@
                 if (confirm('確定要刪除這個行程嗎？此操作無法復原。')) {
                     const currentList = itineraryData.value[selectedDateIndex.value];
                     const index = currentList.findIndex(item => item.id === id);
-                    
                     if (index !== -1) {
                         currentList.splice(index, 1);
                         itineraryData.value[selectedDateIndex.value] = [...currentList];
@@ -741,9 +758,7 @@
             const moveItinerary = (id, direction) => {
                 const currentList = currentItinerary.value;
                 const index = currentList.findIndex(item => item.id === id);
-
                 if (index === -1) return;
-
                 const newIndex = index + direction;
                 if (newIndex >= 0 && newIndex < currentList.length) {
                     const item = currentList.splice(index, 1)[0];
@@ -755,8 +770,6 @@
             const moveItineraryUp = (id) => moveItinerary(id, -1);
             const moveItineraryDown = (id) => moveItinerary(id, 1);
 
-
-            // --- 購物清單管理 ---
             const resetShoppingForm = () => {
                 newShoppingItem.value = { name: '', image: null };
             };
@@ -786,7 +799,6 @@
                 shoppingList.value.splice(index, 1);
             };
 
-            // --- 花費管理 ---
             const resetExpenseForm = () => {
                 newExpense.value = { name: '', amount: null, category: 'food', date: new Date().toISOString().substring(0, 10), payment: 'cash' };
             };
@@ -806,8 +818,8 @@
                 expenses.value.splice(index, 1);
             };
 
-
             onMounted(() => {
+                loadFromStorage();
                 calculateCurrency();
                 expenses.value.sort((a, b) => new Date(b.date) - new Date(a.date));
             });
@@ -824,7 +836,7 @@
                 removeItineraryItem, 
                 moveItineraryUp, moveItineraryDown, 
                 openMap, openMapDirections, formatNumber,
-                execCmd, updateNoteContent, formatNoteDisplay
+                execCmd, updateNoteContent, formatNoteDisplay, resetToDefault
             };
         }
     }).mount('#app');
