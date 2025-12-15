@@ -34,10 +34,7 @@
         .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; background-color: #ffffff; box-shadow: 0 0 30px rgba(0, 0, 0, 0.05); position: relative; padding-bottom: 90px; }
         .header-bg { background-color: #ffffff; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; z-index: 10; }
         .header-image-container { width: 100%; height: 250px; overflow: hidden; background-color: #fdf2f8; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; position: relative; }
-        
-        /* 圖片樣式 */
-        .header-image-container img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 1; } 
-        
+        .header-image-container img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 1; }
         .snow-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.3"/></svg>'); }
         
         .side-tab-bar { position: absolute; bottom: 45px; right: 16px; z-index: 30; display: flex; flex-direction: row; gap: 8px; }
@@ -75,18 +72,7 @@
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0369A1; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .expense-category-tag {
-            min-width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-            flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+        .expense-category-tag { min-width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body>
@@ -195,7 +181,7 @@ bg-white/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
                     <div class="flex-1">
                         <label class="text-[10px] 
 text-red-200 block mb-1 uppercase tracking-wider">CNY (人民幣)</label>
-                        <input type="number" v-model="currencyInput" @input="calculateCurrency" class="w-full bg-white/20 border border-white/30 rounded-xl px-3 py-2.5 text-white placeholder-white/50 focus:outline-none focus:bg-white/30 text-lg font-bold" placeholder="¥">
+                        <input type="number" v-model="currencyInput" @input="calcRate" class="w-full bg-white/20 border border-white/30 rounded-xl px-3 py-2.5 text-white placeholder-white/50 focus:outline-none focus:bg-white/30 text-lg font-bold" placeholder="¥">
                     </div>
                     <i class="fa-solid fa-arrow-right-arrow-left text-red-200 mt-5"></i>
                     <div class="flex-1">
@@ -215,36 +201,6 @@ text-red-200 block mb-1 uppercase tracking-wider">CNY (人民幣)</label>
             </div>
 
             <div class="bg-white rounded-3xl p-6 card-shadow">
-                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2"><i class="fa-solid fa-plane-departure text-blue-500 mr-2"></i> 航班資訊</h3>
-                <div class="space-y-4">
-                    <div class="bg-blue-50 rounded-xl p-3 border border-blue-100">
-                        <div class="flex justify-between text-sm font-bold text-deep-sea-blue mb-1">
-                            <span>SZX 深圳</span>
-                            <i class="fa-solid fa-plane text-xs"></i>
-                            <span>CTU 成都</span>
-                        </div>
-                        <div class="flex justify-between text-xs text-slate-500">
-                            <span>13:45</span>
-                            <span>CA4340 (12/24)</span>
-                            <span>16:30</span>
-                        </div>
-                    </div>
-                    <div class="bg-orange-50 rounded-xl p-3 border border-orange-100">
-                        <div class="flex justify-between text-sm font-bold text-orange-800 mb-1">
-                            <span>CKG 重慶</span>
-                            <i class="fa-solid fa-plane text-xs"></i>
-                            <span>SZX 深圳</span>
-                        </div>
-                        <div class="flex justify-between text-xs text-slate-500">
-                            <span>17:30</span>
-                            <span>CA4340* (1/1)</span>
-                            <span>19:35</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-3xl p-6 card-shadow">
                 <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3"><i class="fa-solid fa-hotel text-indigo-500 mr-2"></i> 住宿資訊</h3>
                 <ul class="space-y-5">
                     <li v-for="hotel in hotels" class="border-b last:border-0 pb-4 last:pb-0">
@@ -260,22 +216,6 @@ text-red-200 block mb-1 uppercase tracking-wider">CNY (人民幣)</label>
                         </div>
                     </li>
                 </ul>
-            </div>
-            
-            <div class="bg-red-50 rounded-3xl p-6 border border-red-100">
-                <h3 class="font-bold text-red-800 mb-4"><i class="fa-solid fa-kit-medical mr-2"></i> 緊急聯絡</h3>
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <a href="tel:110" class="bg-white py-3 rounded-xl shadow-sm text-red-600 font-bold block border border-red-100 hover:bg-red-600 hover:text-white transition-all">
-                        <i class="fa-solid fa-user-shield mr-1"></i> 公安 110
-                    </a>
-                    <a href="tel:120" class="bg-white py-3 rounded-xl shadow-sm text-red-600 font-bold block border border-red-100 hover:bg-red-600 
-hover:text-white transition-all">
-                        <i class="fa-solid fa-truck-medical mr-1"></i> 急救 120
-                    </a>
-                </div>
-                <div class="mt-4 text-xs text-red-500 text-center">
-                    <p>高山症預警：九寨溝/黃龍海拔較高，請注意身體狀況。</p>
-                </div>
             </div>
         </div>
 
@@ -485,7 +425,7 @@ rounded-xl p-3 text-sm text-slate-600 outline-none">
                     <i class="fa-solid fa-trash-can mr-1"></i> 刪除
                 </button>
                 
-                <button @click="saveItem" :class="isEditMode ? 'w-1/3' : 'flex-1'" class="py-3 rounded-xl bg-deep-sea-blue text-white font-bold text-sm shadow-lg shadow-deep-sea-blue/30">{{ isEditMode ? '儲存修改' : '新增行程' }}</button>
+                <button @click="saveItineraryItem" :class="isEditMode ? 'w-1/3' : 'flex-1'" class="py-3 rounded-xl bg-deep-sea-blue text-white font-bold text-sm shadow-lg shadow-deep-sea-blue/30">{{ isEditMode ? '儲存修改' : '新增行程' }}</button>
             </div>
         </div>
     </div>
@@ -509,7 +449,7 @@ rounded-xl p-3 text-sm text-slate-600 outline-none">
     let db = null;
     let docRef = null;
     // 使用新的文件ID以避免舊格式衝突
-    const TRIP_DOC_ID = "trip-data-v2-safe"; 
+    const TRIP_DOC_ID = "trip-data-v3-final"; 
 
     try {
         firebase.initializeApp(firebaseConfig);
@@ -657,8 +597,10 @@ rounded-xl p-3 text-sm text-slate-600 outline-none">
                 name: '', image: null
             });
             
-            // 修正 newItinerary 未定義問題，其實應該用 editForm
-            const newItinerary = ref({}); 
+            // 修正 newItinerary 未定義問題，其實應該用 newItinerary 統一
+            const newItinerary = ref({
+                id: null, name: '', category: 'sightseeing', startTime: '', hours: '', address: '', price: '', note: '', transportType: 'car', travelTime: '', isNoteExpanded: false
+            });
 
             const currencyInput = ref(100);
             const currencyResult = ref(108);
@@ -809,17 +751,25 @@ rounded-xl p-3 text-sm text-slate-600 outline-none">
 
             const execCmd = (cmd, val = null) => {
                 document.execCommand(cmd, false, val);
-                const editor = document.getElementById('editor');
-                if(editor) editForm.value.note = editor.innerHTML;
+                const editor = document.getElementById('noteEditor');
+                if(editor) newItinerary.value.note = editor.innerHTML;
+            };
+            
+            const updateNoteContent = (event) => {
+                newItinerary.value.note = event.target.innerHTML;
             };
 
             // ★★★ 修正 openAddModal 邏輯 ★★★
             const openAddModal = () => {
                 if(currentTab.value === 'itinerary') {
                     isEditMode.value = false;
-                    editForm.value = { id: Date.now(), category: 'sightseeing', transportType: 'car', note: '', startTime: '' };
+                    newItinerary.value = { id: Date.now(), category: 'sightseeing', transportType: 'car', note: '', startTime: '', isNoteExpanded: false };
                     showItineraryModal.value = true;
-                    nextTick(() => document.getElementById('editor').innerHTML = '');
+                    // 清空編輯器
+                    nextTick(() => {
+                        const editor = document.getElementById('noteEditor');
+                        if (editor) editor.innerHTML = '';
+                    });
                 } else if (currentTab.value === 'shopping') {
                     newShoppingItem.value = { name: '', image: null };
                     showShoppingModal.value = true;
@@ -832,40 +782,60 @@ rounded-xl p-3 text-sm text-slate-600 outline-none">
 
             const editItem = (item) => {
                 isEditMode.value = true;
-                editForm.value = JSON.parse(JSON.stringify(item));
+                newItinerary.value = JSON.parse(JSON.stringify(item));
                 showItineraryModal.value = true;
+                // 填充編輯器內容
                 nextTick(() => {
-                    const editor = document.getElementById('editor');
-                    if(editor) editor.innerHTML = formatNoteDisplay(editForm.value.note || '');
+                    const editor = document.getElementById('noteEditor');
+                    if (editor) {
+                        let displayContent = newItinerary.value.note || '';
+                        // 如果是舊純文字資料，將 \n 轉為 <br> 再放入編輯器，讓編輯器能正確顯示換行
+                        if (!displayContent.match(/<[a-z][\s\S]*>/i)) {
+                            displayContent = displayContent.replace(/\n/g, '<br>');
+                        }
+                        editor.innerHTML = displayContent;
+                    }
                 });
             };
 
-            const saveItem = () => {
-                const editor = document.getElementById('editor');
-                if(editor) editForm.value.note = editor.innerHTML;
-
-                if(!editForm.value.name) return alert('請輸入名稱');
+            const saveItineraryItem = () => {
+                if (!newItinerary.value.name) {
+                    alert('行程名稱不能為空');
+                    return;
+                }
+                
+                // 確保從編輯器獲取最新內容
+                const editor = document.getElementById('noteEditor');
+                if (editor) {
+                    newItinerary.value.note = editor.innerHTML;
+                }
 
                 const list = itineraryData.value[selectedDateIndex.value];
                 if (!list) {
                     itineraryData.value[selectedDateIndex.value] = [];
                 }
                 
+                // 獲取最新的引用
+                const targetList = itineraryData.value[selectedDateIndex.value];
+                
                 if(isEditMode.value) {
-                    const idx = itineraryData.value[selectedDateIndex.value].findIndex(i => i.id === editForm.value.id);
+                    const idx = targetList.findIndex(i => i.id === newItinerary.value.id);
                     if(idx !== -1) {
-                        itineraryData.value[selectedDateIndex.value][idx] = { ...editForm.value };
+                        targetList[idx] = { ...newItinerary.value };
                     }
                 } else {
-                    itineraryData.value[selectedDateIndex.value].push({ ...editForm.value });
+                    targetList.push({ ...newItinerary.value });
                 }
+                
+                // 強制觸發更新
+                itineraryData.value[selectedDateIndex.value] = [...targetList];
                 
                 showItineraryModal.value = false;
             };
 
             const deleteItem = () => {
                 if(!confirm('確定刪除？')) return;
-                const idx = itineraryData.value[selectedDateIndex.value].findIndex(i => i.id === editForm.value.id);
+                const idx = itineraryData.value[selectedDateIndex.value].findIndex(i => i.id === newItinerary.value.id);
                 if(idx !== -1) itineraryData.value[selectedDateIndex.value].splice(idx, 1);
                 showItineraryModal.value = false;
             };
@@ -874,12 +844,6 @@ rounded-xl p-3 text-sm text-slate-600 outline-none">
                 const list = itineraryData.value[selectedDateIndex.value];
                 const item = list.splice(idx, 1)[0];
                 list.splice(idx + direction, 0, item);
-            };
-
-            const saveSimpleItem = () => {
-                if(currentTab.value === 'shopping') shoppingList.value.push({ ...simpleForm.value });
-                if(currentTab.value === 'expenses') expenses.value.push({ ...simpleForm.value, date: new Date().toISOString().split('T')[0] });
-                showSimpleModal.value = false;
             };
 
             // ★★★ 新增 Add Shopping Item ★★★
@@ -917,6 +881,32 @@ rounded-xl p-3 text-sm text-slate-600 outline-none">
 
             const deleteShoppingItem = (idx) => shoppingList.value.splice(idx, 1);
             const deleteExpenseItem = (idx) => expenses.value.splice(idx, 1);
+            
+            // 修正行程列表操作函數的參數
+            const removeItineraryItem = (id) => {
+                 if(!confirm('確定刪除？')) return;
+                 const idx = itineraryData.value[selectedDateIndex.value].findIndex(i => i.id === id);
+                 if(idx !== -1) itineraryData.value[selectedDateIndex.value].splice(idx, 1);
+                 showItineraryModal.value = false;
+            };
+            
+            const moveItineraryUp = (id) => {
+                const list = itineraryData.value[selectedDateIndex.value];
+                const index = list.findIndex(i => i.id === id);
+                if (index > 0) {
+                    const item = list.splice(index, 1)[0];
+                    list.splice(index - 1, 0, item);
+                }
+            };
+            
+            const moveItineraryDown = (id) => {
+                const list = itineraryData.value[selectedDateIndex.value];
+                const index = list.findIndex(i => i.id === id);
+                if (index < list.length - 1) {
+                    const item = list.splice(index, 1)[0];
+                    list.splice(index + 1, 0, item);
+                }
+            };
 
             onMounted(() => {
                 loadFromFirebase();
@@ -928,10 +918,10 @@ rounded-xl p-3 text-sm text-slate-600 outline-none">
                 getCategoryColor, getCategoryIcon, getWeatherIcon, getWeatherDescription, getTransportIcon,
                 showItineraryModal, showSimpleModal, showExpenseModal, showShoppingModal, isEditMode, editForm, simpleForm,
                 newExpense, newShoppingItem, newItinerary, // 暴露給 template
-                openAddModal, editItem, saveItem, deleteItem, moveItem, saveSimpleItem, deleteShoppingItem, deleteExpenseItem,
-                addShoppingItem, addExpense, handleImageUpload,
-                openMap, openMapDirections, execCmd, formatNoteDisplay,
-                isInitialLoading, isLoading, loadingMessage, syncStatus, syncStatusText, dbConnected, errorMsg, resetToDefault
+                openAddModal, editItem, saveItineraryItem, deleteItem, moveItem, saveSimpleItem, deleteShoppingItem, deleteExpenseItem,
+                addShoppingItem, addExpense, handleImageUpload, removeItineraryItem, moveItineraryUp, moveItineraryDown,
+                openMap, openMapDirections, execCmd, formatNoteDisplay, updateNoteContent,
+                isInitialLoading, isLoading, loadingMessage, syncStatus, syncStatusText, dbConnected, errorMsg, resetToDefault, formatNumber
             };
         }
     }).mount('#app');
