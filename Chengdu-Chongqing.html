@@ -63,10 +63,18 @@
         .bg-yellow-500 { background-color: #eab308; }
         .loading-screen { position: fixed; inset: 0; background: white; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         
-        .note-content { height: auto; overflow: visible; line-height: 1.6; font-size: 0.9rem; }
+        /* 修改點 2: 修正備註文字溢出問題 */
+        .note-content { 
+            height: auto; 
+            /* overflow: visible;  <-- 移除此行，避免溢出 */
+            overflow-wrap: break-word; /* 加入自動換行 */
+            word-break: break-word;    /* 確保長單字也會換行 */
+            line-height: 1.6; 
+            font-size: 0.9rem; 
+        }
         .note-content b { font-weight: 800; }
-        /* 顯示時的圖片樣式 */
-        .note-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; cursor: zoom-in; box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        /* 顯示時的圖片樣式 - 確保圖片也不會超出 */
+        .note-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; cursor: zoom-in; box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
         .note-content img:hover { transform: scale(1.02); }
 
         .lightbox-overlay { position: fixed; inset: 0; z-index: 100; background-color: rgba(0, 0, 0, 0.9); display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.3s ease; }
@@ -176,6 +184,9 @@
                         <div class="absolute top-3 right-3 flex flex-col space-y-1">
                             <button @click.stop="moveItem(idx, -1)" v-if="idx>0" class="w-7 h-7 bg-gray-100 rounded-full text-xs text-gray-500"><i class="fa-solid fa-arrow-up"></i></button>
                             <button @click.stop="moveItem(idx, 1)" v-if="idx<currentItinerary.length-1" class="w-7 h-7 bg-gray-100 rounded-full text-xs text-gray-500"><i class="fa-solid fa-arrow-down"></i></button>
+                            
+                            <button v-if="item.address" @click.stop="openMap(item.address)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-location-arrow"></i></button>
+
                             <button @click.stop="editItem(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-pencil"></i></button>
                         </div>
                     </div>
@@ -795,4 +806,3 @@
 </script>
 </body>
 </html>
-
