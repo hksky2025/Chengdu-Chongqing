@@ -49,7 +49,7 @@
         .rich-editor-toolbar { padding: 8px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 5px; }
         .rich-editor-content { min-height: 200px; max-height: 400px; overflow-y: auto; padding: 12px; outline: none; background: white; font-size: 14px; line-height: 1.6; }
         
-        /* 修正：確保編輯器內的圖片顯示正常 */
+        /* 編輯器圖片樣式 */
         .rich-editor-content img { display: block; max-width: 100%; border-radius: 8px; margin: 10px 0; border: 1px solid #e2e8f0; }
 
         .tool-btn { padding: 4px 8px; border-radius: 4px; background: white; border: 1px solid #e2e8f0; margin-right: 3px; font-size: 12px; cursor: pointer; }
@@ -65,6 +65,7 @@
         
         .note-content { height: auto; overflow: visible; line-height: 1.6; font-size: 0.9rem; }
         .note-content b { font-weight: 800; }
+        /* 顯示時的圖片樣式 */
         .note-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; cursor: zoom-in; box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
         .note-content img:hover { transform: scale(1.02); }
 
@@ -651,7 +652,7 @@
                 if(editor) editForm.value.note = editor.innerHTML;
             }
 
-            // --- 圖片上傳邏輯 (修復版) ---
+            // --- 圖片上傳邏輯 (修正版) ---
             const triggerImageUpload = () => {
                 editorImageInput.value.click();
             };
@@ -664,29 +665,38 @@
                 reader.onload = (e) => {
                     const imgUrl = e.target.result;
                     const editor = document.getElementById('editor');
-                    
-                    // 1. 強制將焦點還給編輯器
+                    if(!editor) return;
+
+                    // 1. 強制讓編輯器獲得焦點
                     editor.focus();
 
-                    // 2. 構建圖片 HTML (添加樣式確保寬度正常)
-                    const imgHtml = `<img src="${imgUrl}" style="max-width:100%; border-radius:8px; margin: 10px 0;">`;
+                    // 2. 準備圖片 HTML (包含樣式)
+                    const imgHtml = `<img src="${imgUrl}" style="display:block; max-width:100%; border-radius:8px; margin: 10px 0; cursor:zoom-in;">`;
 
-                    // 3. 嘗試插入
-                    try {
-                        // 先嘗試標準指令 (需要焦點)
-                        const success = document.execCommand('insertHTML', false, imgHtml);
-                        if (!success) {
-                            throw new Error('ExecCommand failed');
+                    // 3. 嘗試使用 execCommand 插入 (如果游標在內)
+                    const sel = window.getSelection();
+                    let inserted = false;
+
+                    if (sel.rangeCount > 0) {
+                        const range = sel.getRangeAt(0);
+                        // 檢查游標是否真的在編輯器內
+                        if (editor.contains(range.commonAncestorContainer)) {
+                            // 嘗試插入 HTML
+                            document.execCommand('insertHTML', false, imgHtml);
+                            inserted = true;
                         }
-                    } catch (err) {
-                        // 如果失敗 (例如選取範圍丟失)，則直接附加到最後
-                        editor.innerHTML += imgHtml;
                     }
-                    
+
+                    // 4. 如果上述失敗 (例如游標遺失)，則強制附加到最後
+                    if (!inserted) {
+                         editor.innerHTML += imgHtml;
+                    }
+
+                    // 5. 更新資料
                     updateNoteFromEditor();
                 };
                 reader.readAsDataURL(file);
-                event.target.value = '';
+                event.target.value = ''; // 重置 input
             };
 
             const handleNoteClick = (event) => {
