@@ -70,9 +70,14 @@
         .bg-yellow-500 { background-color: #eab308; }
         .loading-screen { position: fixed; inset: 0; background: white; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         
-        .note-content { max-height: 2.5rem; overflow: hidden; transition: max-height 0.3s ease-out; line-height: 1.6; font-size: 0.9rem; }
+        /* Note Content Styling - Updated to show full text */
+        .note-content { 
+            height: auto; 
+            overflow: visible; 
+            line-height: 1.6; 
+            font-size: 0.9rem; 
+        }
         .note-content b { font-weight: 800; } 
-        .note-content.expanded { max-height: 1000px; }
     </style>
 </head>
 <body>
@@ -166,9 +171,8 @@
                             </div>
                             <div v-if="item.note && item.note.length > 0" class="mt-3 text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100">
                                 <p class="text-slate-600 font-bold mb-1 flex items-center"><i class="fa-solid fa-highlighter text-accent-yellow mr-2"></i> 備註</p>
-                                <div class="note-content text-slate-600" :class="{'expanded': item.isNoteExpanded}" v-html="formatNoteDisplay(item.note)"></div>
-                                <button v-if="item.note.length > 50 || item.note.includes('<')" @click="item.isNoteExpanded = !item.isNoteExpanded" class="text-deep-sea-blue font-bold mt-1 block">{{ item.isNoteExpanded ? '收合備註' : '查看更多...' }}</button>
-                            </div>
+                                <div class="note-content text-slate-600" v-html="formatNoteDisplay(item.note)"></div>
+                                </div>
                         </div>
                         
                         <div class="absolute top-3 right-3 flex flex-col space-y-1">
