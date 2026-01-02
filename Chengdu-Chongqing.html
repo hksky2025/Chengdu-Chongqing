@@ -146,7 +146,7 @@
                 <div v-for="(item, idx) in currentItinerary" :key="item.id" class="relative">
                     <div v-if="idx > 0" class="pl-8 pb-2 flex items-center text-xs text-gray-400">
                         <div class="h-6 w-0.5 bg-gray-200 absolute left-6 -top-3"></div>
-                        <i :class="getTransportIcon(currentItinerary[idx].transportType)" class="mr-2 cursor-pointer hover:text-blue-500" @click="openMapDirections(item)"></i>
+                        <i :class="getTransportIcon(currentItinerary[idx].transportType)" class="mr-2 cursor-pointer hover:text-blue-500" @click="smartNavigate(item)"></i>
                         <span class="font-bold">{{ item.travelTime || '移動' }}</span>
                     </div>
                     
@@ -163,7 +163,7 @@
                             <div class="text-sm text-gray-500 mt-2 space-y-1">
                                 <p v-if="item.hours" class="flex items-center"><i class="fa-regular fa-clock w-4 text-center mr-2 text-ice-blue"></i> 營業: {{ item.hours }}</p>
                                 <p v-if="item.price" class="flex items-center"><i class="fa-solid fa-ticket w-4 text-center mr-2 text-ice-blue"></i> 費用: {{ item.price }}</p>
-                                <p v-if="item.address" @click="openMap(item.address)" class="cursor-pointer hover:text-blue-500 break-all"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-ice-blue"></i> {{ item.address }}</p>
+                                <p v-if="item.address" @click="smartNavigate(item)" class="cursor-pointer hover:text-blue-500 break-all"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-ice-blue"></i> {{ item.address }}</p>
                             </div>
                             <div v-if="item.note && item.note.length > 0" class="mt-3 text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100">
                                 <p class="text-slate-600 font-bold mb-1 flex items-center"><i class="fa-solid fa-highlighter text-accent-yellow mr-2"></i> 備註</p>
@@ -175,7 +175,7 @@
                             <button @click.stop="moveItem(idx, -1)" v-if="idx>0" class="w-7 h-7 bg-gray-100 rounded-full text-xs text-gray-500"><i class="fa-solid fa-arrow-up"></i></button>
                             <button @click.stop="moveItem(idx, 1)" v-if="idx<currentItinerary.length-1" class="w-7 h-7 bg-gray-100 rounded-full text-xs text-gray-500"><i class="fa-solid fa-arrow-down"></i></button>
                             
-                            <button v-if="item.address || item.name" @click.stop="openMapDirections(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-location-arrow"></i></button>
+                            <button v-if="item.address || item.name" @click.stop="smartNavigate(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-location-arrow"></i></button>
 
                             <button @click.stop="editItem(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-pencil"></i></button>
                         </div>
@@ -280,7 +280,7 @@
                     </select>
                 </div>
                 
-                <textarea v-model="editForm.address" placeholder="地址 (用於地圖)" class="w-full bg-gray-50 p-3 rounded-xl text-sm resize-none" rows="2"></textarea>
+                <textarea v-model="editForm.address" placeholder="地址 (支持直接貼上地圖連結)" class="w-full bg-gray-50 p-3 rounded-xl text-sm resize-none" rows="2"></textarea>
                 
                 <div class="grid grid-cols-2 gap-2">
                     <input v-model="editForm.price" placeholder="費用" class="bg-gray-50 p-3 rounded-xl text-sm">
@@ -637,25 +637,37 @@
                 return note.replace(/\n/g, '<br>');
             };
 
-            // 【優化】高德地圖 (Amap) 搜尋 - 使用 URI API 嘗試喚起 App
-            const openMap = (q) => {
-                if (!q) return;
-                // 使用 uri.amap.com/search 並加入 callnative=1 嘗試喚起 App
-                window.open(`https://uri.amap.com/search?keyword=${encodeURIComponent(q)}&callnative=1`, '_blank');
-            };
-
-            // 【重寫優化】高德地圖導航 - 改為「當前位置 -> 目的地」
-            // 舊邏輯：從「上一個行程點」導航到「這個點」，容易因為上一個點是「早餐/交通」而失敗
-            // 新邏輯：直接搜尋目的地並顯示「路線」按鈕，讓用戶從自己當前位置導航
-            const openMapDirections = (item) => {
-                // 優先使用地址，如果沒有地址則使用名稱
-                const destination = item.address || item.name;
+            // 【終極解決方案】智能導航函數
+            const smartNavigate = (item) => {
+                // 優先讀取地址，沒有則使用名稱
+                let query = item.address || item.name;
                 
-                if (!destination) return alert('找不到目的地資訊');
+                if (!query) return alert('找不到地點資訊');
 
-                // 使用 URI API 的 marker 功能，這在手機上體驗最好
-                // 它會在地圖上標記該點，用戶點擊下方的「導航」按鈕即可開始從當前位置導航
-                window.open(`https://uri.amap.com/marker?keyword=${encodeURIComponent(destination)}&src=mytrip&callnative=1`, '_blank');
+                // 去除前後空白
+                query = query.trim();
+
+                // 1. 檢測是否為 "連結" (http 開頭)
+                // 如果是連結，直接打開 (解決貼上大眾點評/高德分享連結無法使用的問題)
+                if (/^https?:\/\//i.test(query)) {
+                    window.open(query, '_blank');
+                    return;
+                }
+
+                // 2. 如果是純文字，執行高德/百度雙重搜尋邏輯
+                // 優先嘗試喚起高德 App (URI Scheme)
+                // 備援：百度地圖網頁版 (以防高德在某些手機瀏覽器無法喚起)
+                
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                const isAndroid = /Android/.test(navigator.userAgent);
+
+                // 構建高德 App 喚起鏈接
+                const amapAppUrl = `https://uri.amap.com/marker?keyword=${encodeURIComponent(query)}&src=mytrip&callnative=1`;
+                // 構建百度地圖網頁搜尋鏈接 (作為強力備份)
+                const baiduWebUrl = `http://api.map.baidu.com/geocoder?address=${encodeURIComponent(query)}&output=html&src=mytrip`;
+
+                // 在新視窗打開高德
+                window.open(amapAppUrl, '_blank');
             };
 
             const execCmd = (cmd, val = null) => {
@@ -668,7 +680,6 @@
                 if(editor) editForm.value.note = editor.innerHTML;
             }
 
-            // --- 圖片上傳邏輯 (修正版) ---
             const triggerImageUpload = () => {
                 editorImageInput.value.click();
             };
@@ -683,30 +694,22 @@
                     const editor = document.getElementById('editor');
                     if(!editor) return;
 
-                    // 1. 強制讓編輯器獲得焦點
                     editor.focus();
-                    // 2. 準備圖片 HTML (包含樣式)
                     const imgHtml = `<img src="${imgUrl}" style="display:block; max-width:100%; border-radius:8px; margin: 10px 0; cursor:zoom-in;">`;
-                    // 3. 嘗試使用 execCommand 插入 (如果游標在內)
                     const sel = window.getSelection();
                     let inserted = false;
 
                     if (sel.rangeCount > 0) {
                         const range = sel.getRangeAt(0);
-                        // 檢查游標是否真的在編輯器內
                         if (editor.contains(range.commonAncestorContainer)) {
-                            // 嘗試插入 HTML
                             document.execCommand('insertHTML', false, imgHtml);
                             inserted = true;
                         }
                     }
 
-                    // 4. 如果上述失敗 (例如游標遺失)，則強制附加到最後
                     if (!inserted) {
                          editor.innerHTML += imgHtml;
                     }
-
-                    // 5. 更新資料
                     updateNoteFromEditor();
                 };
                 reader.readAsDataURL(file);
@@ -750,7 +753,6 @@
                 updateNoteFromEditor();
                 if(!editForm.value.name) return alert('請輸入名稱');
                 
-                // 確保列表存在
                 if (!itineraryData.value[selectedDateIndex.value]) {
                     itineraryData.value[selectedDateIndex.value] = [];
                 }
@@ -800,7 +802,7 @@
                 getCategoryBubbleColor, getCategoryLabel,
                 showItineraryModal, showSimpleModal, isEditMode, editForm, simpleForm,
                 openAddModal, editItem, saveItem, deleteItem, moveItem, saveSimpleItem, deleteShoppingItem, deleteExpenseItem,
-                openMap, openMapDirections, execCmd, formatNoteDisplay,
+                smartNavigate, execCmd, formatNoteDisplay,
                 isInitialLoading, isLoading, loadingMessage, syncStatus, syncStatusText, dbConnected, errorMsg, resetToDefault,
                 editorImageInput, triggerImageUpload, insertImageToEditor, handleNoteClick, lightbox, closeLightbox
             };
