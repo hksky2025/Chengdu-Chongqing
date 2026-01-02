@@ -175,7 +175,7 @@
                             <button @click.stop="moveItem(idx, -1)" v-if="idx>0" class="w-7 h-7 bg-gray-100 rounded-full text-xs text-gray-500"><i class="fa-solid fa-arrow-up"></i></button>
                             <button @click.stop="moveItem(idx, 1)" v-if="idx<currentItinerary.length-1" class="w-7 h-7 bg-gray-100 rounded-full text-xs text-gray-500"><i class="fa-solid fa-arrow-down"></i></button>
                             
-                            <button v-if="item.address || item.name" @click.stop="smartNavigate(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-location-arrow"></i></button>
+                            <button v-if="item.address" @click.stop="smartNavigate(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-location-arrow"></i></button>
 
                             <button @click.stop="editItem(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-pencil"></i></button>
                         </div>
@@ -637,36 +637,26 @@
                 return note.replace(/\n/g, '<br>');
             };
 
-            // 【終極解決方案】智能導航函數
             const smartNavigate = (item) => {
-                // 優先讀取地址，沒有則使用名稱
                 let query = item.address || item.name;
                 
                 if (!query) return alert('找不到地點資訊');
 
-                // 去除前後空白
                 query = query.trim();
 
                 // 1. 檢測是否為 "連結" (http 開頭)
-                // 如果是連結，直接打開 (解決貼上大眾點評/高德分享連結無法使用的問題)
                 if (/^https?:\/\//i.test(query)) {
                     window.open(query, '_blank');
                     return;
                 }
 
                 // 2. 如果是純文字，執行高德/百度雙重搜尋邏輯
-                // 優先嘗試喚起高德 App (URI Scheme)
-                // 備援：百度地圖網頁版 (以防高德在某些手機瀏覽器無法喚起)
-                
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
                 const isAndroid = /Android/.test(navigator.userAgent);
 
-                // 構建高德 App 喚起鏈接
                 const amapAppUrl = `https://uri.amap.com/marker?keyword=${encodeURIComponent(query)}&src=mytrip&callnative=1`;
-                // 構建百度地圖網頁搜尋鏈接 (作為強力備份)
                 const baiduWebUrl = `http://api.map.baidu.com/geocoder?address=${encodeURIComponent(query)}&output=html&src=mytrip`;
 
-                // 在新視窗打開高德
                 window.open(amapAppUrl, '_blank');
             };
 
