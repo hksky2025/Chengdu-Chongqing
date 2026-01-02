@@ -2,9 +2,12 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>成都、樂山大佛、娥媚山、九寨溝、重慶之旅2025</title>
     
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/8xPABCQ.jpeg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -31,8 +34,9 @@
         body { background-color: #F8FAFC; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; color: #334155; }
         .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; background-color: #F8FAFC; box-shadow: 0 0 30px rgba(0, 0, 0, 0.05); position: relative; padding-bottom: 100px; }
         
-        .header-bg { background-color: #ffffff; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; z-index: 10; }
-        .header-image-container { width: 100%; height: 250px; overflow: hidden; background-color: #0c4a6e; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; position: relative; }
+        /* 修改 header 樣式以適應 iPhone 全螢幕模式 (避免被劉海擋住) */
+        .header-bg { background-color: #ffffff; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; z-index: 10; padding-top: env(safe-area-inset-top); }
+        .header-image-container { width: 100%; height: 250px; overflow: hidden; background-color: #0c4a6e; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; position: relative; margin-top: -env(safe-area-inset-top); }
         .header-image-container img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.95; }
         .snow-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.5"/><circle cx="20" cy="80" r="1.5" fill="white" opacity="0.4"/></svg>'); }
         
@@ -53,7 +57,7 @@
         .tool-btn { padding: 4px 8px; border-radius: 4px; background: white; border: 1px solid #e2e8f0; margin-right: 3px; font-size: 12px; cursor: pointer; }
         .color-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid #ddd; }
         
-        .debug-panel { position: absolute; top: 10px; left: 10px; z-index: 50; background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 8px; color: white; font-size: 11px; max-width: 80%; backdrop-filter: blur(4px); }
+        .debug-panel { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 10px; z-index: 50; background: rgba(0,0,0,0.8); padding: 8px 12px; border-radius: 8px; color: white; font-size: 11px; max-width: 80%; backdrop-filter: blur(4px); }
         .status-line { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; }
         .bg-green-500 { background-color: #22c55e; }
@@ -61,7 +65,6 @@
         .bg-yellow-500 { background-color: #eab308; }
         .loading-screen { position: fixed; inset: 0; background: white; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         
-        /* 鎖定畫面樣式 */
         .lock-screen { position: fixed; inset: 0; z-index: 200; background: #0c4a6e; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .lock-bg { position: absolute; inset: 0; background-image: url('https://i.imgur.com/8xPABCQ.jpeg'); background-size: cover; background-position: center; opacity: 0.4; filter: blur(5px); }
 
@@ -405,7 +408,7 @@
             const isLoggedIn = ref(false);
             const inputPassword = ref('');
             const loginError = ref(false);
-            const CORRECT_PASSWORD = 'China@2025'; // 設定你的密碼
+            const CORRECT_PASSWORD = '2025'; // 設定你的密碼
 
             const handleLogin = () => {
                 if (inputPassword.value === CORRECT_PASSWORD) {
@@ -717,6 +720,7 @@
                 if(editor) editForm.value.note = editor.innerHTML;
             }
 
+            // --- 圖片上傳邏輯 (修正版) ---
             const triggerImageUpload = () => {
                 editorImageInput.value.click();
             };
@@ -731,22 +735,30 @@
                     const editor = document.getElementById('editor');
                     if(!editor) return;
 
+                    // 1. 強制讓編輯器獲得焦點
                     editor.focus();
+                    // 2. 準備圖片 HTML (包含樣式)
                     const imgHtml = `<img src="${imgUrl}" style="display:block; max-width:100%; border-radius:8px; margin: 10px 0; cursor:zoom-in;">`;
+                    // 3. 嘗試使用 execCommand 插入 (如果游標在內)
                     const sel = window.getSelection();
                     let inserted = false;
 
                     if (sel.rangeCount > 0) {
                         const range = sel.getRangeAt(0);
+                        // 檢查游標是否真的在編輯器內
                         if (editor.contains(range.commonAncestorContainer)) {
+                            // 嘗試插入 HTML
                             document.execCommand('insertHTML', false, imgHtml);
                             inserted = true;
                         }
                     }
 
+                    // 4. 如果上述失敗 (例如游標遺失)，則強制附加到最後
                     if (!inserted) {
                          editor.innerHTML += imgHtml;
                     }
+
+                    // 5. 更新資料
                     updateNoteFromEditor();
                 };
                 reader.readAsDataURL(file);
@@ -790,6 +802,7 @@
                 updateNoteFromEditor();
                 if(!editForm.value.name) return alert('請輸入名稱');
                 
+                // 確保列表存在
                 if (!itineraryData.value[selectedDateIndex.value]) {
                     itineraryData.value[selectedDateIndex.value] = [];
                 }
