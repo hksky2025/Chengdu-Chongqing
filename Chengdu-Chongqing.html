@@ -158,12 +158,12 @@
                             <span v-if="item.startTime" class="text-xs font-bold text-slate-600 mt-1">{{ item.startTime }}</span>
                         </div>
 
-                        <div class="flex-1 pb-1 pr-6">
+                        <div class="flex-1 pb-1 pr-12">
                             <h3 class="text-lg font-bold text-gray-800 leading-tight">{{ item.name }}</h3>
                             <div class="text-sm text-gray-500 mt-2 space-y-1">
                                 <p v-if="item.hours" class="flex items-center"><i class="fa-regular fa-clock w-4 text-center mr-2 text-ice-blue"></i> 營業: {{ item.hours }}</p>
                                 <p v-if="item.price" class="flex items-center"><i class="fa-solid fa-ticket w-4 text-center mr-2 text-ice-blue"></i> 費用: {{ item.price }}</p>
-                                <p v-if="item.address" @click="openMap(item.address)" class="cursor-pointer hover:text-blue-500"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-ice-blue"></i> {{ item.address }}</p>
+                                <p v-if="item.address" @click="openMap(item.address)" class="cursor-pointer hover:text-blue-500 break-all"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-ice-blue"></i> {{ item.address }}</p>
                             </div>
                             <div v-if="item.note && item.note.length > 0" class="mt-3 text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100">
                                 <p class="text-slate-600 font-bold mb-1 flex items-center"><i class="fa-solid fa-highlighter text-accent-yellow mr-2"></i> 備註</p>
@@ -279,7 +279,9 @@
                         <option value="walk">步行</option><option value="car">打車</option><option value="public">高鐵/地鐵</option><option value="bus">巴士</option><option value="boat">乘船</option><option value="other">其他</option>
                     </select>
                 </div>
-                <input v-model="editForm.address" placeholder="地址 (用於地圖)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
+                
+                <textarea v-model="editForm.address" placeholder="地址 (用於地圖)" class="w-full bg-gray-50 p-3 rounded-xl text-sm resize-none" rows="2"></textarea>
+                
                 <div class="grid grid-cols-2 gap-2">
                     <input v-model="editForm.price" placeholder="費用" class="bg-gray-50 p-3 rounded-xl text-sm">
                     <input v-model="editForm.travelTime" placeholder="車程" class="bg-gray-50 p-3 rounded-xl text-sm">
