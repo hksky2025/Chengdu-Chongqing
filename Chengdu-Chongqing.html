@@ -146,7 +146,7 @@
                 <div v-for="(item, idx) in currentItinerary" :key="item.id" class="relative">
                     <div v-if="idx > 0" class="pl-8 pb-2 flex items-center text-xs text-gray-400">
                         <div class="h-6 w-0.5 bg-gray-200 absolute left-6 -top-3"></div>
-                        <i :class="getTransportIcon(currentItinerary[idx].transportType)" class="mr-2 cursor-pointer hover:text-blue-500" @click="openMapDirections(currentItinerary[idx-1], item)"></i>
+                        <i :class="getTransportIcon(currentItinerary[idx].transportType)" class="mr-2 cursor-pointer hover:text-blue-500" @click="openMapDirections(item)"></i>
                         <span class="font-bold">{{ item.travelTime || '移動' }}</span>
                     </div>
                     
@@ -175,7 +175,7 @@
                             <button @click.stop="moveItem(idx, -1)" v-if="idx>0" class="w-7 h-7 bg-gray-100 rounded-full text-xs text-gray-500"><i class="fa-solid fa-arrow-up"></i></button>
                             <button @click.stop="moveItem(idx, 1)" v-if="idx<currentItinerary.length-1" class="w-7 h-7 bg-gray-100 rounded-full text-xs text-gray-500"><i class="fa-solid fa-arrow-down"></i></button>
                             
-                            <button v-if="item.address" @click.stop="openMap(item.address)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-location-arrow"></i></button>
+                            <button v-if="item.address || item.name" @click.stop="openMapDirections(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-location-arrow"></i></button>
 
                             <button @click.stop="editItem(item)" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-full text-xs"><i class="fa-solid fa-pencil"></i></button>
                         </div>
@@ -637,19 +637,25 @@
                 return note.replace(/\n/g, '<br>');
             };
 
-            // 高德地圖 (Amap) 搜尋 (已修改)
+            // 【優化】高德地圖 (Amap) 搜尋 - 使用 URI API 嘗試喚起 App
             const openMap = (q) => {
-                // 使用高德地圖 Web 搜尋
-                window.open(`https://www.amap.com/search?query=${encodeURIComponent(q)}`, '_blank');
+                if (!q) return;
+                // 使用 uri.amap.com/search 並加入 callnative=1 嘗試喚起 App
+                window.open(`https://uri.amap.com/search?keyword=${encodeURIComponent(q)}&callnative=1`, '_blank');
             };
 
-            // 高德地圖 (Amap) 路線規劃 (已修改)
-            const openMapDirections = (s, e) => {
-                const start = s.address || s.name;
-                const end = e.address || e.name;
-                // 使用高德地圖 Web 路線規劃
-                // 格式: from[name]=起點&to[name]=終點
-                window.open(`https://ditu.amap.com/dir?from[name]=${encodeURIComponent(start)}&to[name]=${encodeURIComponent(end)}`, '_blank');
+            // 【重寫優化】高德地圖導航 - 改為「當前位置 -> 目的地」
+            // 舊邏輯：從「上一個行程點」導航到「這個點」，容易因為上一個點是「早餐/交通」而失敗
+            // 新邏輯：直接搜尋目的地並顯示「路線」按鈕，讓用戶從自己當前位置導航
+            const openMapDirections = (item) => {
+                // 優先使用地址，如果沒有地址則使用名稱
+                const destination = item.address || item.name;
+                
+                if (!destination) return alert('找不到目的地資訊');
+
+                // 使用 URI API 的 marker 功能，這在手機上體驗最好
+                // 它會在地圖上標記該點，用戶點擊下方的「導航」按鈕即可開始從當前位置導航
+                window.open(`https://uri.amap.com/marker?keyword=${encodeURIComponent(destination)}&src=mytrip&callnative=1`, '_blank');
             };
 
             const execCmd = (cmd, val = null) => {
